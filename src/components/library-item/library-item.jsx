@@ -74,6 +74,7 @@ class LibraryItemComponent extends React.PureComponent {
                         loading="lazy"
                         draggable={false}
                         src={this.props.iconURL}
+                        onError={this.props.onImageError}
                     />
                 </div>
                 {this.props.insetIconURL ? (
@@ -90,9 +91,48 @@ class LibraryItemComponent extends React.PureComponent {
                         classNames(styles.featuredExtensionText, styles.featuredText) : styles.featuredText
                     }
                 >
-                    <span className={styles.libraryItemName}>{this.props.name}</span>
+                    {this.props.href ? (
+                        <a
+                            href={this.props.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={styles.libraryItemNameLink}
+                            title={`点击查看扩展详情：${this.props.name}\n链接：${this.props.href}`}
+                            onClick={e => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                window.open(this.props.href, '_blank', 'noopener,noreferrer');
+                            }}
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <span className={styles.libraryItemName}>{this.props.name}</span>
+                        </a>
+                    ) : (
+                        <span className={styles.libraryItemName}>{this.props.name}</span>
+                    )}
                     <br />
-                    <span className={styles.featuredDescription}>{this.props.description}</span>
+                    <span 
+                        className={styles.featuredDescription}
+                        title={this.props.fullDescription || this.props.description}
+                    >
+                        {this.props.description && this.props.description.length > 80
+                            ? `${this.props.description.substring(0, 80)}...`
+                            : this.props.description}
+                    </span>
+                    {this.props.tags && this.props.tags.filter(t => t !== 'cysoeditor-hub').length > 0 && (
+                        <div className={styles.categoryTags}>
+                            {this.props.tags.filter(t => t !== 'cysoeditor-hub').map((tag, index) => (
+                                <span key={index} className={styles.categoryTag}>
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    {this.props.isCyso && (
+                        <div className={styles.cysoTag}>
+                            CYSO
+                        </div>
+                    )}
                 </div>
 
                 {(this.props.docsURI || this.props.samples) && (
@@ -140,7 +180,24 @@ class LibraryItemComponent extends React.PureComponent {
                             {' '}
                             {this.props.credits.map((credit, index) => (
                                 <React.Fragment key={index}>
-                                    {credit}
+                                    {typeof credit === 'object' && credit.id ? (
+                                        <a
+                                            href={`https://cyscrexthub.cc.cd/user?id=${credit.id}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            title={`查看作者主页：${credit.name}`}
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                window.open(`https://cyscrexthub.cc.cd/user?id=${credit.id}`, '_blank', 'noopener,noreferrer');
+                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {credit.name}
+                                        </a>
+                                    ) : (
+                                        typeof credit === 'object' ? credit.name : credit
+                                    )}
                                     {index !== this.props.credits.length - 1 && (
                                         ', '
                                     )}
@@ -232,10 +289,29 @@ class LibraryItemComponent extends React.PureComponent {
                             loading="lazy"
                             src={this.props.iconURL}
                             draggable={false}
+                            onError={this.props.onImageError}
                         />
                     </Box>
                 </Box>
-                <span className={styles.libraryItemName}>{this.props.name}</span>
+                {this.props.href ? (
+                    <a
+                        href={this.props.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={styles.libraryItemName}
+                        title={`点击查看扩展详情：${this.props.name}\n链接：${this.props.href}`}
+                        onClick={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            window.open(this.props.href, '_blank', 'noopener,noreferrer');
+                        }}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        {this.props.name}
+                    </a>
+                ) : (
+                    <span className={styles.libraryItemName}>{this.props.name}</span>
+                )}
                 {this.props.showPlayButton ? (
                     <PlayButton
                         isPlaying={this.props.isPlaying}
@@ -274,7 +350,11 @@ LibraryItemComponent.propTypes = {
     ]),
     credits: PropTypes.arrayOf(PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.node
+        PropTypes.node,
+        PropTypes.shape({
+            name: PropTypes.string,
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        })
     ])),
     docsURI: PropTypes.string,
     samples: PropTypes.arrayOf(PropTypes.shape({
@@ -291,7 +371,12 @@ LibraryItemComponent.propTypes = {
     onMouseLeave: PropTypes.func.isRequired,
     onPlay: PropTypes.func.isRequired,
     onStop: PropTypes.func.isRequired,
-    showPlayButton: PropTypes.bool
+    onImageError: PropTypes.func,
+    showPlayButton: PropTypes.bool,
+    isCyso: PropTypes.bool,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    href: PropTypes.string,
+    fullDescription: PropTypes.string
 };
 
 LibraryItemComponent.defaultProps = {

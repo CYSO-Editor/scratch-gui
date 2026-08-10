@@ -389,7 +389,7 @@ export default [
                 description="Name of the strange 'TurboWarp Blocks' extension"
                 id="tw.twExtension.name"
                 values={{
-                    APP_NAME
+                    APP_NAME: 'TurboWarp'
                 }}
             />
         ),
@@ -436,7 +436,7 @@ export const galleryLoading = {
             description="Name of extensions.turbowarp.org in extension library"
             id="tw.extensionGallery.name"
             values={{
-                APP_NAME
+                APP_NAME: 'TurboWarp'
             }}
         />
     ),
@@ -462,7 +462,7 @@ export const galleryMore = {
             description="Name of extensions.turbowarp.org in extension library"
             id="tw.extensionGallery.name"
             values={{
-                APP_NAME
+                APP_NAME: 'TurboWarp'
             }}
         />
     ),
@@ -488,7 +488,7 @@ export const galleryError = {
             description="Name of extensions.turbowarp.org in extension library"
             id="tw.extensionGallery.name"
             values={{
-                APP_NAME
+                APP_NAME: 'TurboWarp'
             }}
         />
     ),

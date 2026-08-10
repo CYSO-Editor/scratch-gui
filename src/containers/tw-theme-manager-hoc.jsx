@@ -2,10 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import bindAll from 'lodash.bindall';
-import {applyGuiColors} from '../lib/themes/guiHelpers';
+import {applyGuiColors, applyCustomTheme} from '../lib/themes/guiHelpers';
 import {BLOCKS_CUSTOM, Theme} from '../lib/themes';
 import {detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance';
-import {setTheme} from '../reducers/theme';
+import {setTheme, setCustomTheme} from '../reducers/theme';
 
 const TWThemeManagerHOC = function (WrappedComponent) {
     class TWThemeManagerComponent extends React.Component {
@@ -17,6 +17,7 @@ const TWThemeManagerHOC = function (WrappedComponent) {
             applyGuiColors(props.reduxTheme);
         }
         componentDidMount () {
+            applyCustomTheme();
             this.removeListeners = onSystemPreferenceChange(this.handleSystemThemeChange);
         }
         componentDidUpdate (prevProps) {

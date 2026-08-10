@@ -4,6 +4,7 @@ import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
+import {setCYSOCoreEnabled} from '../reducers/tw';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 
@@ -30,8 +31,15 @@ class UsernameModal extends React.Component {
             'handleStageWidthChange',
             'handleStageHeightChange',
             'handleDisableCompilerChange',
-            'handleStoreProjectOptions'
+            'handleStoreProjectOptions',
+            'handleRequestCYSOCoreEnable',
+            'handleCYSOCoreDisable',
+            'handleCYSOCoreCancel',
+            'handleCYSOCoreConfirm'
         ]);
+        this.state = {
+            cysoCoreModalVisible: false
+        };
     }
     handleFramerateChange (e) {
         this.props.vm.setFramerate(e.target.checked ? 60 : 30);
@@ -85,6 +93,25 @@ class UsernameModal extends React.Component {
     handleStoreProjectOptions () {
         this.props.vm.storeProjectOptions();
     }
+    handleRequestCYSOCoreEnable () {
+        this.setState({cysoCoreModalVisible: true});
+    }
+    handleCYSOCoreDisable () {
+        this.props.setCYSOCoreEnabled(false);
+    }
+    handleCYSOCoreCancel () {
+        this.setState({cysoCoreModalVisible: false});
+    }
+    handleCYSOCoreConfirm () {
+        this.props.setCYSOCoreEnabled(true);
+        
+        if (this.props.vm && this.props.vm.runtime) {
+            this.props.vm.runtime.cysoCoreEnabled = true;
+        }
+        this.setState({cysoCoreModalVisible: false});
+        this.props.vm.storeProjectOptions();
+        this.props.vm.storeCYSOConfig();
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -114,6 +141,12 @@ class UsernameModal extends React.Component {
                     this.props.customStageSize.height !== defaultStageSize.height
                 }
                 onStoreProjectOptions={this.handleStoreProjectOptions}
+                cysoCoreEnabled={this.props.cysoCoreEnabled}
+                cysoCoreModalVisible={this.state.cysoCoreModalVisible}
+                onRequestCYSOCoreEnable={this.handleRequestCYSOCoreEnable}
+                onCYSOCoreDisable={this.handleCYSOCoreDisable}
+                onCYSOCoreCancel={this.handleCYSOCoreCancel}
+                onCYSOCoreConfirm={this.handleCYSOCoreConfirm}
                 {...props}
             />
         );
@@ -132,7 +165,8 @@ UsernameModal.propTypes = {
         setInterpolation: PropTypes.func,
         setRuntimeOptions: PropTypes.func,
         setStageSize: PropTypes.func,
-        storeProjectOptions: PropTypes.func
+        storeProjectOptions: PropTypes.func,
+        storeCYSOConfig: PropTypes.func
     }),
     isEmbedded: PropTypes.bool,
     framerate: PropTypes.number,
@@ -146,7 +180,9 @@ UsernameModal.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
-    disableCompiler: PropTypes.bool
+    disableCompiler: PropTypes.bool,
+    cysoCoreEnabled: PropTypes.bool,
+    setCYSOCoreEnabled: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -160,11 +196,13 @@ const mapStateToProps = state => ({
     removeLimits: !state.scratchGui.tw.runtimeOptions.miscLimits,
     warpTimer: state.scratchGui.tw.compilerOptions.warpTimer,
     customStageSize: state.scratchGui.customStageSize,
-    disableCompiler: !state.scratchGui.tw.compilerOptions.enabled
+    disableCompiler: !state.scratchGui.tw.compilerOptions.enabled,
+    cysoCoreEnabled: state.scratchGui.tw.cysoCoreEnabled
 });
 
 const mapDispatchToProps = dispatch => ({
-    onClose: () => dispatch(closeSettingsModal())
+    onClose: () => dispatch(closeSettingsModal()),
+    setCYSOCoreEnabled: enabled => dispatch(setCYSOCoreEnabled(enabled))
 });
 
 export default injectIntl(connect(

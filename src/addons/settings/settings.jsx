@@ -35,7 +35,8 @@ import infoImage from './icons/info.svg';
 import TWFancyCheckbox from '../../components/tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings.css';
 import {detectTheme} from '../../lib/themes/themePersistance.js';
-import {applyGuiColors} from '../../lib/themes/guiHelpers.js';
+import {applyGuiColors, applyCustomTheme} from '../../lib/themes/guiHelpers.js';
+import {GUI_MISTY_SAND} from '../../lib/themes/index.js';
 import {APP_NAME} from '../../lib/brand.js';
 import '../../lib/normalize.css';
 
@@ -59,7 +60,68 @@ if (locale !== 'en') {
 
 document.title = `${settingsTranslations.title} - ${APP_NAME}`;
 const theme = detectTheme();
+
+let isMistySand = false;
+const getRootDocument = () => {
+    try {
+        if (window.opener && window.opener.document && window.opener.document.documentElement) {
+            return window.opener.document;
+        }
+    } catch (e) {  }
+    try {
+        if (window.parent && window.parent !== window && window.parent.document) {
+            return window.parent.document;
+        }
+    } catch (e) {  }
+    return null;
+};
+const detectMistySand = () => {
+    const rootDocument = getRootDocument();
+    if (rootDocument && rootDocument.documentElement.classList.contains('tw-misty-sand-theme')) {
+        return true;
+    }
+    try {
+        const persisted = localStorage.getItem('tw:theme');
+        if (persisted) {
+            const parsed = JSON.parse(persisted);
+            if (parsed.gui === GUI_MISTY_SAND) {
+                return true;
+            }
+        }
+    } catch (e) {  }
+    return false;
+};
+isMistySand = detectMistySand();
+if (isMistySand) {
+    theme.gui = GUI_MISTY_SAND;
+}
+document.documentElement.classList.toggle('tw-misty-sand-theme', isMistySand);
+document.body.classList.toggle('tw-misty-sand-theme', isMistySand);
 applyGuiColors(theme);
+applyCustomTheme(theme);
+if (window.console) {
+    console.log('[CYSO-misty] misty-sand:', isMistySand,
+        '| theme.gui:', theme.gui,
+        '| html class:', document.documentElement.className,
+        '| page-bg:', getComputedStyle(document.documentElement).getPropertyValue('--page-background'));
+}
+
+
+if (typeof window !== 'undefined' && window.opener && typeof window.opener.addEventListener === 'function') {
+    try {
+        window.opener.addEventListener('theme-changed', () => {
+            const next = detectTheme();
+            const stillMisty = detectMistySand();
+            if (stillMisty) {
+                next.gui = GUI_MISTY_SAND;
+            }
+            document.documentElement.classList.toggle('tw-misty-sand-theme', stillMisty);
+            document.body.classList.toggle('tw-misty-sand-theme', stillMisty);
+            applyGuiColors(next);
+            applyCustomTheme(next);
+        });
+    } catch (e) {  }
+}
 
 let _throttleTimeout;
 const postThrottledSettingsChange = store => {

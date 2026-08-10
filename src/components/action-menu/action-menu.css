@@ -136,8 +136,22 @@ button::-moz-focus-inner {
     background-color: $extensions-primary !important;
     opacity: 1 !important;
     border: 1px solid hsla(0, 0%, 0%, .1) !important;
+    border-radius: $form-radius !important;
     box-shadow: 0 0 .5rem hsla(0, 0%, 0%, .25) !important;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    z-index: $z-index-tooltip !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 1px !important;
+    min-height: 1px !important;
+    height: auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    padding: 6px 14px !important;
+    line-height: 1.4 !important;
+    pointer-events: none !important;
 }
 
 .tooltip:after {
@@ -150,14 +164,6 @@ button::-moz-focus-inner {
 
 .coming-soon-tooltip:after {
     background-color: $data-primary !important;
-}
-
-.tooltip {
-    border: 1px solid hsla(0, 0%, 0%, .1) !important;
-    border-radius: $form-radius !important;
-    box-shadow: 0 0 .5rem hsla(0, 0%, 0%, .25) !important;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    z-index: $z-index-tooltip !important;
 }
 
 $arrow-size: 0.5rem;

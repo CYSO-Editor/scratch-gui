@@ -6,10 +6,10 @@
     flex-grow: 1;
     position: relative;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    margin-right: calc($space / 2);
+    margin-right: $space;
     background-color: $ui-secondary;
-    border-top-right-radius: $space;
-    border-top-left-radius: $space;
+    border-top-right-radius: $radius-lg;
+    border-top-left-radius: $radius-lg;
     border-color: $ui-black-transparent;
     border-width: 1px;
     border-style: solid;
@@ -74,11 +74,11 @@
 
 .add-button {
     position: absolute;
-    bottom: 0.75rem;
+    bottom: $space-md;
 }
 
 [dir="ltr"] .add-button {
-    right: 1rem;
+    right: $space-lg;
 }
 
 [dir="rtl"] .add-button {

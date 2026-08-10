@@ -1,5 +1,6 @@
 const SecurityModals = {
     LoadExtension: 'LoadExtension',
+    BatchLoadExtensions: 'BatchLoadExtensions',
     Fetch: 'Fetch',
     OpenWindow: 'OpenWindow',
     Redirect: 'Redirect',
@@ -9,7 +10,8 @@ const SecurityModals = {
     Notify: 'Notify',
     Geolocate: 'Geolocate',
     Embed: 'Embed',
-    Download: 'Download'
+    Download: 'Download',
+    CustomPermission: 'CustomPermission'
 };
 
 export default SecurityModals;

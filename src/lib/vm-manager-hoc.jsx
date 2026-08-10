@@ -129,7 +129,7 @@ const vmManagerHOC = function (WrappedComponent) {
         isStarted: PropTypes.bool,
         loadingState: PropTypes.oneOf(LoadingStates),
         locale: PropTypes.string,
-        messages: PropTypes.objectOf(PropTypes.string),
+        messages: PropTypes.object,
         onError: PropTypes.func,
         onLoadedProject: PropTypes.func,
         onSetProjectUnchanged: PropTypes.func,

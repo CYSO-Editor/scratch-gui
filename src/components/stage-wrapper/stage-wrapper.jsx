@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import VM from 'scratch-vm';
 
 import Box from '../box/box.jsx';
-import {STAGE_DISPLAY_SIZES} from '../../lib/layout-constants.js';
+import {STAGE_DISPLAY_SIZES, STAGE_SIZE_MODES} from '../../lib/layout-constants.js';
 import StageHeader from '../../containers/stage-header.jsx';
 import Stage from '../../containers/stage.jsx';
 import Loader from '../loader/loader.jsx';
@@ -15,12 +15,18 @@ const StageWrapperComponent = function (props) {
     const {
         isEmbedded,
         isFullScreen,
+        isMistySand,
         isRtl,
         isRendererSupported,
         loading,
         stageSize,
+        stageSizeMode,
         vm
     } = props;
+
+    const isMinimized = stageSizeMode === STAGE_SIZE_MODES.minimized;
+
+    const showFrost = isFullScreen && isMistySand;
 
     return (
         <Box
@@ -30,27 +36,36 @@ const StageWrapperComponent = function (props) {
                     [styles.embedded]: isEmbedded,
                     [styles.fullScreen]: isFullScreen,
                     [styles.loading]: loading,
-                    [styles.offsetControls]: !(isEmbedded || isFullScreen)
+                    [styles.offsetControls]: !(isEmbedded || isFullScreen),
+                    [styles.minimized]: isMinimized
                 }
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
         >
+            {showFrost && (
+                <div
+                    className={styles.fullScreenFrost}
+                    aria-hidden
+                />
+            )}
             <Box className={styles.stageMenuWrapper}>
                 <StageHeader
                     stageSize={stageSize}
                     vm={vm}
                 />
             </Box>
-            <Box className={styles.stageCanvasWrapper}>
-                {
-                    isRendererSupported ?
-                        <Stage
-                            stageSize={stageSize}
-                            vm={vm}
-                        /> :
-                        null
-                }
-            </Box>
+            {!isMinimized && (
+                <Box className={styles.stageCanvasWrapper}>
+                    {
+                        isRendererSupported ?
+                            <Stage
+                                stageSize={stageSize}
+                                vm={vm}
+                            /> :
+                            null
+                    }
+                </Box>
+            )}
             {loading ? (
                 <Loader isFullScreen={isFullScreen} />
             ) : null}
@@ -61,11 +76,13 @@ const StageWrapperComponent = function (props) {
 StageWrapperComponent.propTypes = {
     isEmbedded: PropTypes.bool,
     isFullScreen: PropTypes.bool,
+    isMistySand: PropTypes.bool,
     isRendererSupported: PropTypes.bool.isRequired,
     isRtl: PropTypes.bool.isRequired,
     loading: PropTypes.bool,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
+    stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
-export default StageWrapperComponent;
+export default React.memo(StageWrapperComponent);

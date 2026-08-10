@@ -4,6 +4,7 @@
 
 .blocks {
     height: 100%;
+    position: relative;
 }
 
 .drag-over:after {
@@ -15,7 +16,7 @@
     height: 100%;
     opacity: 0.75;
     background-color: $drop-highlight;
-    transition: all 0.25s ease;
+    transition: opacity 0.25s ease;
 }
 
 .blocks :global(.injectionDiv){
@@ -27,6 +28,8 @@
     border: 1px solid $ui-black-transparent;
     border-top-right-radius: $space;
     border-bottom-right-radius: $space;
+    transition: box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 [dir="rtl"] .blocks :global(.injectionDiv) {
@@ -45,6 +48,9 @@
     border-bottom: 1px solid $ui-black-transparent;
     box-sizing: content-box;
     height: calc(100% - 3.25rem) !important;
+    background: linear-gradient(135deg, $ui-primary 0%, $ui-secondary 100%);
+    will-change: background-position;
+    backface-visibility: hidden;
 
     /*
         For now, the layout cannot support scrollbars in the category menu.
@@ -67,13 +73,15 @@
 .blocks :global(.blocklyFlyout) {
     border-right: 1px solid $ui-black-transparent;
     box-sizing: content-box;
+    transition: all 0.3s ease;
+    background: rgba($ui-secondary, 0.95);
+    backdrop-filter: blur(10px);
 }
 
 [dir="rtl"] .blocks :global(.blocklyFlyout) {
     border-right: none;
     border-left: 1px solid $ui-black-transparent;
 }
-
 
 .blocks :global(.blocklyBlockDragSurface) {
     /*
@@ -91,9 +99,61 @@
 */
 .blocks :global(.scratchCategoryMenuItemLabel) {
     font-size: 0.65rem;
+    transition: all 0.3s ease;
+}
+
+.blocks :global(.scratchCategoryMenuItem) {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    border-radius: 0.25rem;
+    margin: 0.125rem 0.25rem;
+    will-change: transform;
+}
+
+.blocks :global(.scratchCategoryMenuItem:hover) {
+    background: rgba($looks-secondary, 0.2);
+    transform: translateX(4px);
+}
+
+[dir="rtl"] .blocks :global(.scratchCategoryMenuItem:hover) {
+    transform: translateX(-4px);
+}
+
+.blocks :global(.scratchCategoryMenuItem.selected) {
+    background: rgba($looks-secondary, 0.3);
+    transform: translateX(4px);
+}
+
+[dir="rtl"] .blocks :global(.scratchCategoryMenuItem.selected) {
+    transform: translateX(-4px);
 }
 
 .blocks :global(.blocklyMinimalBody) {
     min-width: auto;
     min-height: auto;
+}
+
+/*
+  黑暗模式下页面 color-scheme 为 dark，会让原生的注释文本框（textarea）使用白色文字，
+  而注释框背景是浅黄色（#fef49c），导致文字看不清。这里强制一个可读的深色文字。
+  如果“自定义积木颜色”插件启用了，则使用它定义的 --editorTheme3-commentText 变量。
+*/
+:global(.scratchCommentTextarea) {
+    color: var(--editorTheme3-commentText, #000000);
+}
+
+@keyframes fluidBackground {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.blocks :global(.blocklyToolboxDiv) {
+    background-size: 200% 200%;
+    animation: fluidBackground 10s ease infinite;
 }

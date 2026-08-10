@@ -62,7 +62,11 @@ export default async function ({ addon, console, msg }) {
         "scratch-gui/navigation/ACTIVATE_TAB",
       ],
     });
-    let button = menu.parentElement.previousElementSibling.previousElementSibling; //The base button that the popup menu is from
+    let button = menu.parentElement.querySelector("button[aria-label]"); //The base button that the popup menu is from
+
+    if (!button) {
+      continue;
+    }
 
     let id = button.getAttribute("aria-label").replace(/\s+/g, "_");
 

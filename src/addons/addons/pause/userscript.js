@@ -36,8 +36,7 @@ export default async function ({ addon, console, msg }) {
 
   while (true) {
     await addon.tab.waitForElement("[class^='green-flag']", {
-      markAsSeen: true,
-      reduxEvents: ["scratch-gui/mode/SET_PLAYER", "fontsLoaded/SET_FONTS_LOADED", "scratch-gui/locales/SELECT_LOCALE"],
+      markAsSeen: true
     });
     addon.tab.appendToSharedSpace({ space: "afterGreenFlag", element: img, order: 0 });
   }

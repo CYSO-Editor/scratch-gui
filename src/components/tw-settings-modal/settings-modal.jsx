@@ -9,6 +9,7 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import Input from '../forms/input.jsx';
 import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
 import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
+import CYSOCoreModal from './cyso-core-modal.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/brand.js';
@@ -410,7 +411,7 @@ const StoreProjectOptions = ({onStoreProjectOptions}) => (
             <p>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when TurboWarp loads this project. Warp timer and disable compiler will not be saved."
+                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when CYSO Editor loads this project. Warp timer and disable compiler will not be saved."
                     description="Help text for the store settings in project button"
                     id="tw.settingsModal.storeProjectOptionsHelp"
                 />
@@ -420,6 +421,33 @@ const StoreProjectOptions = ({onStoreProjectOptions}) => (
 );
 StoreProjectOptions.propTypes = {
     onStoreProjectOptions: PropTypes.func
+};
+
+const CYSOCoreSetting = ({enabled, onRequestEnable, onRequestDisable}) => (
+    <div className={styles.dangerZone}>
+        <div className={styles.dangerZoneHeader}>
+            ⚠️ CYSO Core
+        </div>
+        <div className={styles.dangerZoneWarning}>
+            开启此模式将会移除编辑器和扩展的大部分限制。使用此功能时，请从可信来源运行项目。如没有需要，请谨慎开启！！
+        </div>
+        <div style={{fontSize: '12px', color: '#666', marginBottom: '0.5rem'}}>
+            此设置会保存在项目中。
+        </div>
+        <button
+            className={classNames(styles.dangerZoneButton, {
+                [styles.active]: enabled
+            })}
+            onClick={enabled ? onRequestDisable : onRequestEnable}
+        >
+            {enabled ? '已开启 - 点击关闭' : '开启 CYSO Core'}
+        </button>
+    </div>
+);
+CYSOCoreSetting.propTypes = {
+    enabled: PropTypes.bool,
+    onRequestEnable: PropTypes.func,
+    onRequestDisable: PropTypes.func
 };
 
 const Header = props => (
@@ -433,79 +461,92 @@ Header.propTypes = {
 };
 
 const SettingsModalComponent = props => (
-    <Modal
-        className={styles.modalContent}
-        onRequestClose={props.onClose}
-        contentLabel={props.intl.formatMessage(messages.title)}
-        id="settingsModal"
-    >
-        <Box className={styles.body}>
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Featured"
-                    description="Settings modal section"
-                    id="tw.settingsModal.featured"
+    <React.Fragment>
+        <Modal
+            className={styles.modalContent}
+            onRequestClose={props.onClose}
+            contentLabel={props.intl.formatMessage(messages.title)}
+            id="settingsModal"
+        >
+            <Box className={styles.body}>
+                <Header>
+                    <FormattedMessage
+                        defaultMessage="Featured"
+                        description="Settings modal section"
+                        id="tw.settingsModal.featured"
+                    />
+                </Header>
+                <CustomFPS
+                    framerate={props.framerate}
+                    onChange={props.onFramerateChange}
+                    onCustomizeFramerate={props.onCustomizeFramerate}
                 />
-            </Header>
-            <CustomFPS
-                framerate={props.framerate}
-                onChange={props.onFramerateChange}
-                onCustomizeFramerate={props.onCustomizeFramerate}
-            />
-            <Interpolation
-                value={props.interpolation}
-                onChange={props.onInterpolationChange}
-            />
-            <HighQualityPen
-                value={props.highQualityPen}
-                onChange={props.onHighQualityPenChange}
-            />
-            <WarpTimer
-                value={props.warpTimer}
-                onChange={props.onWarpTimerChange}
-            />
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Remove Limits"
-                    description="Settings modal section"
-                    id="tw.settingsModal.removeLimits"
+                <Interpolation
+                    value={props.interpolation}
+                    onChange={props.onInterpolationChange}
                 />
-            </Header>
-            <InfiniteClones
-                value={props.infiniteClones}
-                onChange={props.onInfiniteClonesChange}
-            />
-            <RemoveFencing
-                value={props.removeFencing}
-                onChange={props.onRemoveFencingChange}
-            />
-            <RemoveMiscLimits
-                value={props.removeLimits}
-                onChange={props.onRemoveLimitsChange}
-            />
-            <Header>
-                <FormattedMessage
-                    defaultMessage="Danger Zone"
-                    description="Settings modal section"
-                    id="tw.settingsModal.dangerZone"
+                <HighQualityPen
+                    value={props.highQualityPen}
+                    onChange={props.onHighQualityPenChange}
                 />
-            </Header>
-            {!props.isEmbedded && (
-                <CustomStageSize
-                    {...props}
+                <WarpTimer
+                    value={props.warpTimer}
+                    onChange={props.onWarpTimerChange}
                 />
-            )}
-            <DisableCompiler
-                value={props.disableCompiler}
-                onChange={props.onDisableCompilerChange}
+                <Header>
+                    <FormattedMessage
+                        defaultMessage="Remove Limits"
+                        description="Settings modal section"
+                        id="tw.settingsModal.removeLimits"
+                    />
+                </Header>
+                <InfiniteClones
+                    value={props.infiniteClones}
+                    onChange={props.onInfiniteClonesChange}
+                />
+                <RemoveFencing
+                    value={props.removeFencing}
+                    onChange={props.onRemoveFencingChange}
+                />
+                <RemoveMiscLimits
+                    value={props.removeLimits}
+                    onChange={props.onRemoveLimitsChange}
+                />
+                <Header>
+                    <FormattedMessage
+                        defaultMessage="Danger Zone"
+                        description="Settings modal section"
+                        id="tw.settingsModal.dangerZone"
+                    />
+                </Header>
+                {!props.isEmbedded && (
+                    <CustomStageSize
+                        {...props}
+                    />
+                )}
+                <DisableCompiler
+                    value={props.disableCompiler}
+                    onChange={props.onDisableCompilerChange}
+                />
+                {!props.isEmbedded && (
+                    <StoreProjectOptions
+                        {...props}
+                    />
+                )}
+                <CYSOCoreSetting
+                    enabled={props.cysoCoreEnabled}
+                    onRequestEnable={props.onRequestCYSOCoreEnable}
+                    onRequestDisable={props.onCYSOCoreDisable}
+                />
+            </Box>
+        </Modal>
+        {props.cysoCoreModalVisible && (
+            <CYSOCoreModal
+                onCancel={props.onCYSOCoreCancel}
+                onConfirm={props.onCYSOCoreConfirm}
             />
-            {!props.isEmbedded && (
-                <StoreProjectOptions
-                    {...props}
-                />
-            )}
-        </Box>
-    </Modal>
+        )}
+    </React.Fragment>
 );
 
 SettingsModalComponent.propTypes = {
@@ -528,7 +569,13 @@ SettingsModalComponent.propTypes = {
     warpTimer: PropTypes.bool,
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,
-    onDisableCompilerChange: PropTypes.func
+    onDisableCompilerChange: PropTypes.func,
+    cysoCoreEnabled: PropTypes.bool,
+    cysoCoreModalVisible: PropTypes.bool,
+    onRequestCYSOCoreEnable: PropTypes.func,
+    onCYSOCoreDisable: PropTypes.func,
+    onCYSOCoreCancel: PropTypes.func,
+    onCYSOCoreConfirm: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

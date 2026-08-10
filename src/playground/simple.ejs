@@ -8,9 +8,24 @@
       body[data-splash-theme="dark"] {
         background: #111;
       }
+      body[data-splash-theme="aurora"] {
+        background: #4F8EC2;
+      }
+      body[data-splash-theme="misty-sand"] {
+        background: linear-gradient(135deg, #e9f1fb 0%, #f7f1e8 48%, #eef5f0 100%);
+      }
 
       noscript {
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+
+      html.tw-misty-sand-theme {
+        background: linear-gradient(135deg, #e9f1fb 0%, #f7f1e8 48%, #eef5f0 100%) fixed;
+      }
+      html.tw-misty-sand-theme,
+      html.tw-misty-sand-theme body {
+        background: transparent !important;
+        color: hsla(220, 22%, 28%, 1);
       }
     </style>
   </head>
@@ -22,6 +37,17 @@
     <script>
       (function() {
         var theme = '';
+        var isMistySand = false;
+
+        try {
+          if (window.opener && window.opener.document && window.opener.document.documentElement &&
+              window.opener.document.documentElement.classList.contains('tw-misty-sand-theme')) {
+            isMistySand = true;
+          } else if (window.parent && window.parent !== window && window.parent.document &&
+              window.parent.document.documentElement.classList.contains('tw-misty-sand-theme')) {
+            isMistySand = true;
+          }
+        } catch (e) {}
 
         try {
           var themeSetting = localStorage.getItem('tw:theme');
@@ -35,19 +61,52 @@
         } else if (themeSetting) {
           try {
             var parsed = JSON.parse(themeSetting);
-            if (parsed.gui === 'dark' || parsed.gui === 'light') {
+            if (parsed.gui === 'dark' || parsed.gui === 'light' || parsed.gui === 'aurora') {
               theme = parsed.gui;
+            }
+            if (parsed.gui === 'misty-sand') {
+              isMistySand = true;
             }
           } catch (e) {
             // ignore
           }
         }
 
+        if (isMistySand) {
+          theme = 'misty-sand';
+        }
         if (!theme) {
-          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          theme = 'aurora';
         }
 
         document.body.setAttribute('data-splash-theme', theme);
+
+        if (isMistySand) {
+          var doc = document.documentElement;
+          doc.classList.add('tw-misty-sand-theme');
+          document.body.classList.add('tw-misty-sand-theme');
+          try { document.title = (document.title ? document.title + ' ' : '') + '[雾砂]'; } catch (e) { /* ignore */ }
+          document.body.style.background = 'linear-gradient(135deg, #e9f1fb 0%, #f7f1e8 48%, #eef5f0 100%)';
+          var vars = {
+            'color-scheme': 'light',
+            'ui-primary': 'hsla(40, 30%, 96%, 1)',
+            'ui-secondary': 'hsla(40, 25%, 93%, 1)',
+            'ui-tertiary': 'hsla(40, 20%, 88%, 1)',
+            'ui-black-transparent': 'hsla(220, 30%, 30%, 0.12)',
+            'text-primary': 'hsla(220, 22%, 28%, 1)',
+            'page-background': 'hsla(40, 30%, 96%, 1)',
+            'page-foreground': 'hsla(220, 22%, 28%, 1)',
+            'input-background': 'hsla(0, 0%, 100%, 0.7)',
+            'shadow': 'hsla(220, 30%, 40%, 0.18)',
+            'link-color': 'hsla(220, 70%, 45%, 1)',
+            'popover-background': 'hsla(0, 0%, 100%, 0.85)',
+            'ui-modal-background': 'hsla(0, 0%, 100%, 0.72)',
+            'ui-modal-foreground': 'hsla(220, 22%, 28%, 1)'
+          };
+          for (var k in vars) {
+            try { doc.style.setProperty('--' + k, vars[k]); } catch (e) { /* ignore */ }
+          }
+        }
       })();
     </script>
 

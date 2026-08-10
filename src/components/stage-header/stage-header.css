@@ -39,6 +39,13 @@
 
 .stage-size-row {
     display: flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.stage-button-row {
+    display: flex;
+    gap: 0.2rem;
 }
 
 .stage-size-toggle-group {
@@ -71,6 +78,8 @@
     padding: 0.375rem;
     user-select: none;
     cursor: pointer;
+    transition: background-color 0.15s ease;
+    will-change: background-color;
 }
 
 .stage-button:active {
@@ -90,4 +99,39 @@
 .fullscreen-buttons-row {
     /* relied on by addons */
     display: flex;
+}
+
+:global(html):not(:global(.tw-dark-theme)):not(:global(.tw-misty-sand-theme)) .stage-button {
+    background: #e9ecf1 !important;
+    border: 1px solid rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+:global(html):not(:global(.tw-dark-theme)):not(:global(.tw-misty-sand-theme)) .stage-button:hover {
+    background: #dfe3ea !important;
+}
+:global(html):not(:global(.tw-dark-theme)):not(:global(.tw-misty-sand-theme)) .stage-button-icon {
+    filter: none !important;
+}
+:global(html.tw-dark-theme) .stage-button {
+    background: #1e1e1e !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+}
+:global(html.tw-dark-theme) .stage-button:hover {
+    background: #2e2e2e !important;
+}
+:global(html.tw-dark-theme) .stage-button-icon {
+    filter: grayscale(100%) brightness(1.7) !important;
+}
+
+:global(html.tw-misty-sand-theme) .stage-button {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border: 1px solid rgba(0, 0, 0, 0.35) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+:global(html.tw-misty-sand-theme) .stage-button:hover {
+    background: rgba(255, 255, 255, 0.88) !important;
+}
+html.tw-misty-sand-theme .stage-button-icon {
+    filter: none !important;
 }

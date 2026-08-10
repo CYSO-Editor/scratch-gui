@@ -5,6 +5,10 @@
 
 :root {
     color-scheme: var(--color-scheme);
+    --cyso-radius-sm: 6px;
+    --cyso-radius-md: 8px;
+    --cyso-radius-lg: 12px;
+    --cyso-radius-xl: 16px;
 }
 
 /* popover is used by gui and paint */

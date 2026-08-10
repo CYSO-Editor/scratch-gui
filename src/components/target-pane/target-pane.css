@@ -10,7 +10,7 @@
 .stage-selector-wrapper {
     display: flex;
     flex-basis: 72px;
-    flex-shrink: 0;
+    flex-shrink: 1;
 }
 
 [dir="ltr"] .stage-selector-wrapper {

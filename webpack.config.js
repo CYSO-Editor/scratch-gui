@@ -32,7 +32,10 @@ const base = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     devtool: process.env.SOURCEMAP || (process.env.NODE_ENV === 'production' ? false : 'cheap-module-source-map'),
     devServer: {
-        contentBase: path.resolve(__dirname, 'build'),
+        contentBase: [
+            path.resolve(__dirname, 'build'),
+            path.resolve(__dirname, 'static')
+        ],
         host: '0.0.0.0',
         disableHostCheck: true,
         compress: true,
@@ -62,7 +65,11 @@ const base = {
         symlinks: false,
         alias: {
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
-            'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts')
+            'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
+            // 强制 scratch-blocks 走新版 compressed 入口（含自定义返回值等新特性）。
+            // 否则可能解析到旧的 uncompressed 版本，导致
+            // workspace.enableProcedureReturns 等新 API 缺失。
+            'scratch-blocks$': path.resolve(__dirname, 'node_modules/scratch-blocks/shim/vertical.js')
         }
     },
     module: {

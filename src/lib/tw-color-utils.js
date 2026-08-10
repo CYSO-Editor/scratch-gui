@@ -24,12 +24,18 @@
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+const HEX_COLOR_PATTERN = /^#?([0-9a-fA-F]{6})$/;
+
 /**
  * @param {string} hex hex color code like #abc123
  * @returns {number[]} [r, g, b] in range [0-255]. Alpha channel is ignored.
  */
 const hex2rgb = hex => {
-    const parsed = Number.parseInt(hex.substring(1), 16);
+    const match = String(hex).match(HEX_COLOR_PATTERN);
+    if (!match) {
+        return [0x80, 0x80, 0x80];
+    }
+    const parsed = Number.parseInt(match[1], 16);
     return [
         (parsed >> 16) & 255,
         (parsed >> 8) & 255,

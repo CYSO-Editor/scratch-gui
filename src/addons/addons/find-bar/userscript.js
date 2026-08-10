@@ -5,6 +5,188 @@ import Utils from "./blockly/Utils.js";
 export default async function ({ addon, msg, console }) {
   const Blockly = await addon.tab.traps.getBlockly();
 
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function makeImageTag(url, alt) {
+    const m = url.match(/^image\.([a-f0-9]+)\.(png|jpe?g|gif|svg|webp)$/i) ||
+              url.match(/^([a-f0-9]+)\.(png|jpe?g|gif|svg|webp)$/i);
+    if (m) {
+      return `<img class="sa-md-img" data-sa-md-assetid="${m[1]}" data-sa-md-format="${m[2]}" alt="${alt ? escapeHtml(alt) : ""}">`;
+    }
+    if (/^(https?:\/\/|data:image\/)/i.test(url)) {
+      return `<img class="sa-md-img" src="${escapeHtml(url)}" alt="${alt ? escapeHtml(alt) : ""}">`;
+    }
+    return escapeHtml(url);
+  }
+
+  function inlineMd(text) {
+    text = text.replace(/`([^`]+)`/g, (m, c) => `<code>${c}</code>`);
+    text = text.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+    text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    text = text.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+    text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    text = text.replace(/(^|[^_\w])_([^_]+)_/g, "$1<em>$2</em>");
+    text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, u) => makeImageTag(u, alt));
+    text = text.replace(/@image:([^\s]+)/g, (m, u) => makeImageTag(u, ""));
+    text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, t, u) => {
+      const safe = /^(https?:\/\/|mailto:|\/|#)/i.test(u) ? u : "#";
+      return `<a href="${safe}" target="_blank" rel="noopener noreferrer">${t}</a>`;
+    });
+    return text;
+  }
+
+  function renderMarkdown(src) {
+    const lines = String(src).replace(/\r\n/g, "\n").split("\n");
+    let html = "";
+    let i = 0;
+    let para = [];
+    const flushPara = () => {
+      if (para.length) {
+        html += `<p class="sa-md-p">${inlineMd(escapeHtml(para.join(" ")))}</p>`;
+        para = [];
+      }
+    };
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^```/.test(line.trim())) {
+        flushPara();
+        const buf = [];
+        i++;
+        while (i < lines.length && !/^```/.test(lines[i].trim())) {
+          buf.push(escapeHtml(lines[i]));
+          i++;
+        }
+        i++;
+        html += `<pre class="sa-md-pre"><code>${buf.join("\n")}</code></pre>`;
+        continue;
+      }
+      const h = line.match(/^(#{1,6})\s*(.*)$/);
+      if (h) {
+        flushPara();
+        const lv = h[1].length;
+        html += `<h${lv} class="sa-md-heading">${inlineMd(escapeHtml(h[2]))}</h${lv}>`;
+        i++;
+        continue;
+      }
+      if (/^>\s?/.test(line)) {
+        flushPara();
+        const buf = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) {
+          buf.push(lines[i].replace(/^>\s?/, ""));
+          i++;
+        }
+        const qt = buf.join("\n");
+        const alert = qt.match(/^\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*([\s\S]*)$/i);
+        if (alert) {
+          const type = alert[1].toLowerCase();
+          html += `<div class="sa-md-alert sa-md-alert-${type}"><div class="sa-md-alert-title">${type}</div>${renderMarkdown(alert[2])}</div>`;
+        } else {
+          html += `<blockquote>${inlineMd(escapeHtml(qt))}</blockquote>`;
+        }
+        continue;
+      }
+      if (/^[-*]\s+/.test(line)) {
+        flushPara();
+        const items = [];
+        while (i < lines.length && /^[-*]\s+/.test(lines[i])) {
+          items.push(lines[i].replace(/^[-*]\s+/, ""));
+          i++;
+        }
+        html += `<ul>${items.map((it) => `<li>${inlineMd(escapeHtml(it))}</li>`).join("")}</ul>`;
+        continue;
+      }
+      if (/^\d+\.\s+/.test(line)) {
+        flushPara();
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i])) {
+          items.push(lines[i].replace(/^\d+\.\s+/, ""));
+          i++;
+        }
+        html += `<ol>${items.map((it) => `<li>${inlineMd(escapeHtml(it))}</li>`).join("")}</ol>`;
+        continue;
+      }
+      if (/^(---|\*\*\*|___)\s*$/.test(line.trim())) {
+        flushPara();
+        html += `<hr>`;
+        i++;
+        continue;
+      }
+      if (line.trim() === "") {
+        flushPara();
+        i++;
+        continue;
+      }
+      para.push(line.trim());
+      i++;
+    }
+    flushPara();
+    return html;
+  }
+
+  function loadReadmeImages(body) {
+    const runtime = addon.tab.traps.vm.runtime;
+    const storage = runtime && runtime.storage;
+    if (!storage || !storage.load) return;
+    const imgs = body.querySelectorAll("img.sa-md-img[data-sa-md-assetid]");
+    for (const img of imgs) {
+      const assetId = img.dataset.saMdAssetid;
+      const format = (img.dataset.saMdFormat || "png").toLowerCase();
+      const safeAlt = img.getAttribute("alt") || "图片";
+      try {
+        const fmt = (storage.DataFormat && storage.DataFormat[format.toUpperCase()]) || storage.DataFormat.PNG;
+        const assetType = format === "svg"
+          ? storage.AssetType.ImageVector
+          : storage.AssetType.ImageBitmap;
+        storage.load(assetType, assetId, fmt)
+          .then((asset) => {
+            if (asset && asset.encodeDataURI) {
+              img.src = asset.encodeDataURI();
+            } else {
+              throw new Error("asset missing");
+            }
+          })
+          .catch((err) => {
+            console.error("[find-bar README] image load failed", assetId, err);
+            img.setAttribute("alt", `${safeAlt}（加载失败）`);
+            img.style.opacity = "0.5";
+          });
+      } catch (err) {
+        console.error("[find-bar README] image format error", assetId, format, err);
+      }
+    }
+  }
+
+  function deferImages(body) {
+    const run = () => loadReadmeImages(body);
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(run, { timeout: 2000 });
+    } else {
+      setTimeout(run, 0);
+    }
+  }
+
+  function findReadmeCommentsForTarget(target) {
+    const out = [];
+    if (!target || !target.comments) return out;
+    for (const c of Object.values(target.comments)) {
+      const text = c.text || "";
+      const lines = text.split("\n");
+      const firstIdx = lines.findIndex((l) => l.trim() !== "");
+      if (firstIdx < 0) continue;
+      if (/^#README\b/.test(lines[firstIdx].trim())) {
+        lines[firstIdx] = lines[firstIdx].replace(/^#README\b\s*/, "");
+        out.push({ id: c.id, text: lines.join("\n") });
+      }
+    }
+    return out;
+  }
+
   class FindBar {
     constructor() {
       this.utils = new Utils(addon);
@@ -18,6 +200,21 @@ export default async function ({ addon, msg, console }) {
       this.dropdown = new Dropdown(this.utils);
 
       document.addEventListener("keydown", (e) => this.eventKeyDown(e), true);
+
+      this._stageAutoOpened = false;
+      this._readmeHas = null;
+      this._loading = false;
+      this._pendingStageReadme = null;
+
+      window.addEventListener("cyso:load-progress", () => {
+        this._loading = true;
+      });
+      window.addEventListener("cyso:load-complete", () => {
+        this._loading = false;
+        this._prepareStageReadme();
+        this._tryOpenStageReadme();
+        this.updateReadmeButtonState();
+      });
     }
 
     get workspace() {
@@ -50,6 +247,162 @@ export default async function ({ addon, msg, console }) {
 
       this.bindEvents();
       this.tabChanged();
+      this.createMdButton();
+      this._prepareStageReadme();
+      this._tryOpenStageReadme();
+    }
+
+    createMdButton() {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sa-readme-btn";
+      btn.title = "README（Markdown 文档）";
+      btn.setAttribute("aria-label", "README");
+      btn.innerHTML =
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" ' +
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>' +
+        '<path d="M14 3v5h5"/>' +
+        '<path d="M8.5 13h7M8.5 16h7M8.5 10h3"/>' +
+        "</svg>";
+      btn.addEventListener("click", () => this.toggleReadme());
+      this.findBarOuter.appendChild(btn);
+      this.mdButton = btn;
+      this.updateReadmeButtonState();
+    }
+
+    findReadmeComments() {
+      let target;
+      try {
+        target = this.utils.getEditingTarget();
+      } catch (e) {
+        target = null;
+      }
+      return findReadmeCommentsForTarget(target);
+    }
+
+    findStageReadmeComments() {
+      let stage;
+      try {
+        stage = addon.tab.traps.vm.runtime.getTargetForStage();
+      } catch (e) {
+        stage = null;
+      }
+      return findReadmeCommentsForTarget(stage);
+    }
+
+    updateReadmeButtonState() {
+      if (this._loading) return;
+      if (!this.mdButton) return;
+      const has = this.findReadmeComments().length > 0;
+      if (has === this._readmeHas) return;
+      this._readmeHas = has;
+      this.mdButton.classList.toggle("sa-readme-has", has);
+      this.mdButton.style.display = has ? "" : "none";
+    }
+
+    toggleReadme() {
+      if (this.readmeOverlay && this.readmeOverlay.parentNode) {
+        this.closeReadme();
+        return;
+      }
+      const comments = this.findReadmeComments();
+      if (!comments.length) {
+        return;
+      }
+      this.openReadme(comments);
+    }
+
+    _prepareStageReadme() {
+      this._pendingStageReadme = null;
+      const comments = this.findStageReadmeComments();
+      if (!comments.length) return;
+      const body = document.createElement("div");
+      body.className = "sa-readme-body";
+      let html = "";
+      for (const c of comments) {
+        html += renderMarkdown(c.text);
+      }
+      body.innerHTML = html;
+      const firstHeading = body.querySelector(".sa-md-heading");
+      let title = "";
+      if (firstHeading) {
+        title = firstHeading.textContent.trim();
+        firstHeading.remove();
+      }
+      this._pendingStageReadme = { body, title };
+    }
+
+    _tryOpenStageReadme() {
+      if (this._loading) return;
+      if (this._stageAutoOpened) return;
+      if (!this._pendingStageReadme) return;
+      this._displayReadme(this._pendingStageReadme.body, this._pendingStageReadme.title);
+      this._stageAutoOpened = true;
+      this._pendingStageReadme = null;
+    }
+
+    openReadme(comments) {
+      const body = document.createElement("div");
+      body.className = "sa-readme-body";
+      let html = "";
+      for (const c of comments) {
+        html += renderMarkdown(c.text);
+      }
+      body.innerHTML = html;
+      const firstHeading = body.querySelector(".sa-md-heading");
+      let title = "";
+      if (firstHeading) {
+        title = firstHeading.textContent.trim();
+        firstHeading.remove();
+      }
+      this._displayReadme(body, title);
+    }
+
+    _displayReadme(body, title) {
+      const overlay = document.createElement("div");
+      overlay.className = "sa-readme-overlay";
+
+      const panel = document.createElement("div");
+      panel.className = "sa-readme-panel";
+
+      const header = document.createElement("div");
+      header.className = "sa-readme-header";
+      const titleEl = document.createElement("span");
+      titleEl.textContent = title;
+      header.appendChild(titleEl);
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "sa-readme-close";
+      closeBtn.innerHTML = "&times;";
+      closeBtn.addEventListener("click", () => this.closeReadme());
+      header.appendChild(closeBtn);
+      panel.appendChild(header);
+
+      panel.appendChild(body);
+
+      overlay.appendChild(panel);
+      overlay.addEventListener("mousedown", (e) => {
+        if (e.target === overlay) this.closeReadme();
+      });
+      document.body.appendChild(overlay);
+      deferImages(body);
+      this.readmeOverlay = overlay;
+      this._readmeEsc = (e) => {
+        if (e.key === "Escape") this.closeReadme();
+      };
+      document.addEventListener("keydown", this._readmeEsc);
+    }
+
+    closeReadme() {
+      if (this.readmeOverlay && this.readmeOverlay.parentNode) {
+        this.readmeOverlay.parentNode.removeChild(this.readmeOverlay);
+      }
+      this.readmeOverlay = null;
+      if (this._readmeEsc) {
+        document.removeEventListener("keydown", this._readmeEsc);
+        this._readmeEsc = null;
+      }
     }
 
     bindEvents() {
@@ -825,8 +1178,25 @@ export default async function ({ addon, msg, console }) {
 
   addon.tab.redux.initialize();
   addon.tab.redux.addEventListener("statechanged", (e) => {
-    if (e.detail.action.type === "scratch-gui/navigation/ACTIVATE_TAB") {
+    const t = e.detail.action.type || "";
+    if (t === "scratch-gui/navigation/ACTIVATE_TAB") {
       findBar.tabChanged();
+    }
+    if (
+      t.startsWith("scratch-gui/workspace") ||
+      t.startsWith("scratch-gui/targets/") ||
+      t.startsWith("scratch-gui/project/")
+    ) {
+      findBar.updateReadmeButtonState();
+    }
+    if (
+      t === "scratch-gui/cmd/NEW_PROJECT" ||
+      t === "scratch-gui/cmd/LOAD_PROJECT" ||
+      t.startsWith("scratch-gui/project/")
+    ) {
+      findBar._loading = true;
+      findBar._stageAutoOpened = false;
+      findBar._pendingStageReadme = null;
     }
   });
 

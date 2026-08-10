@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 import bindAll from 'lodash.bindall';
 import ReactTooltip from 'react-tooltip';
@@ -45,6 +46,14 @@ class ActionMenu extends React.Component {
     componentWillUnmount () {
         this.buttonRef.removeEventListener('touchstart', this.handleTouchStart);
         document.removeEventListener('touchstart', this.handleTouchOutside);
+        if (this.closeTimeoutId) {
+            clearTimeout(this.closeTimeoutId);
+            this.closeTimeoutId = null;
+        }
+        if (this.forceHideTimeoutId) {
+            clearTimeout(this.forceHideTimeoutId);
+            this.forceHideTimeoutId = null;
+        }
     }
     handleClosePopover () {
         this.closeTimeoutId = setTimeout(() => {
@@ -82,7 +91,7 @@ class ActionMenu extends React.Component {
             // This prevents keyboard events from triggering the button
             this.buttonRef.blur();
             this.setState({forceHide: true, isOpen: false}, () => {
-                setTimeout(() => this.setState({forceHide: false}));
+                this.forceHideTimeoutId = setTimeout(() => this.setState({forceHide: false}));
             });
         };
     }
@@ -99,13 +108,22 @@ class ActionMenu extends React.Component {
     setContainerRef (ref) {
         this.containerRef = ref;
     }
+    renderTooltip (id, className) {
+        return ReactDOM.createPortal((
+            <ReactTooltip
+                className={className}
+                effect="solid"
+                id={id}
+                place={this.props.tooltipPlace || 'left'}
+            />
+        ), document.body);
+    }
     render () {
         const {
             className,
             img: mainImg,
             title: mainTitle,
             moreButtons,
-            tooltipPlace,
             onClick
         } = this.props;
 
@@ -133,12 +151,7 @@ class ActionMenu extends React.Component {
                         src={mainImg}
                     />
                 </button>
-                <ReactTooltip
-                    className={styles.tooltip}
-                    effect="solid"
-                    id={this.mainTooltipId}
-                    place={tooltipPlace || 'left'}
-                />
+                {this.renderTooltip(this.mainTooltipId, styles.tooltip)}
                 <div className={styles.moreButtonsOuter}>
                     <div className={styles.moreButtons}>
                         {(moreButtons || []).map(({img, title, onClick: handleClick,
@@ -172,14 +185,9 @@ class ActionMenu extends React.Component {
                                                 onChange={fileChange}
                                             />) : null}
                                     </button>
-                                    <ReactTooltip
-                                        className={classNames(styles.tooltip, {
-                                            [styles.comingSoonTooltip]: isComingSoon
-                                        })}
-                                        effect="solid"
-                                        id={tooltipId}
-                                        place={tooltipPlace || 'left'}
-                                    />
+                                    {this.renderTooltip(tooltipId, classNames(styles.tooltip, {
+                                        [styles.comingSoonTooltip]: isComingSoon
+                                    }))}
                                 </div>
                             );
                         })}

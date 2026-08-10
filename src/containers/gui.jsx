@@ -68,6 +68,19 @@ class GUI extends React.Component {
             setProjectIdMetadata(this.props.projectId);
         }
         if (this.props.isShowingProject && !prevProps.isShowingProject) {
+            
+            if (this.props.vm && this.props.vm.runtime) {
+                const runtime = this.props.vm.runtime;
+                
+                if (runtime.cysoCoreEnabled) {
+                    window.dispatchEvent(new CustomEvent('cysoCoreLoaded', {
+                        detail: {
+                            cysoCoreEnabled: runtime.cysoCoreEnabled,
+                            extensionPermissions: runtime.extensionPermissions || {}
+                        }
+                    }));
+                }
+            }
             // this only notifies container when a project changes from not yet loaded to loaded
             // At this time the project view in www doesn't need to know when a project is unloaded
             this.props.onProjectLoaded();
@@ -173,6 +186,7 @@ const mapStateToProps = state => {
         tipsLibraryVisible: state.scratchGui.modals.tipsLibrary,
         usernameModalVisible: state.scratchGui.modals.usernameModal,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
+        cysoCoreEnabled: state.scratchGui.tw.cysoCoreEnabled,
         customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
         fontsModalVisible: state.scratchGui.modals.fontsModal,
         unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,

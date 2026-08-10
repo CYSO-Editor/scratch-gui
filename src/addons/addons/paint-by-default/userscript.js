@@ -121,10 +121,10 @@ export default async function ({ addon, console }) {
       if (!mainButton) {
         return;
       }
-      const tooltipElement = mainButton.parentElement.querySelector(".__react_component_tooltip");
+      const tooltipElement = document.getElementById(mainButton.dataset.for);
       const { tooltip } = getButtonToClick(mainButton);
       const translatedTooltip = addon.tab.redux.state.locales.messages[tooltip];
-      const needToFixTooltipText = translatedTooltip && tooltipElement.textContent !== translatedTooltip;
+      const needToFixTooltipText = translatedTooltip && tooltipElement && tooltipElement.textContent !== translatedTooltip;
       if (needToFixTooltipText) {
         tooltipElement.textContent = translatedTooltip;
         setTimeout(() => {

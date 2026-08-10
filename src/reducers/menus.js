@@ -11,7 +11,9 @@ const MENU_MODE = 'modeMenu';
 const MENU_SETTINGS = 'settingsMenu';
 const MENU_ACCENT = 'accentMenu';
 const MENU_BLOCKS_THEME = 'blocksThemeMenu';
+const MENU_GUI = 'guiMenu';
 const MENU_ERRORS = 'errorsMenu';
+const MENU_PERSONALIZATION = 'personalizationMenu';
 
 class Menu {
     constructor (id) {
@@ -54,6 +56,7 @@ const rootMenu = new Menu('root')
     .addChild(
         new Menu(MENU_SETTINGS)
             .addChild(new Menu(MENU_LANGUAGE))
+            .addChild(new Menu(MENU_GUI))
             .addChild(new Menu(MENU_ACCENT))
             .addChild(new Menu(MENU_BLOCKS_THEME))
     )
@@ -61,6 +64,7 @@ const rootMenu = new Menu('root')
     .addChild(new Menu(MENU_EDIT))
     .addChild(new Menu(MENU_MODE))
     .addChild(new Menu(MENU_SETTINGS))
+    .addChild(new Menu(MENU_PERSONALIZATION))
     .addChild(new Menu(MENU_LOGIN))
     .addChild(new Menu(MENU_ACCOUNT))
     .addChild(new Menu(MENU_ABOUT));
@@ -74,9 +78,11 @@ const initialState = {
     [MENU_LOGIN]: false,
     [MENU_MODE]: false,
     [MENU_SETTINGS]: false,
+    [MENU_GUI]: false,
     [MENU_ACCENT]: false,
     [MENU_BLOCKS_THEME]: false,
-    [MENU_ERRORS]: false
+    [MENU_ERRORS]: false,
+    [MENU_PERSONALIZATION]: false
 };
 
 const reducer = function (state, action) {
@@ -152,9 +158,17 @@ const openAccentMenu = () => openMenu(MENU_ACCENT);
 const closeAccentMenu = () => closeMenu(MENU_ACCENT);
 const accentMenuOpen = state => state.scratchGui.menus[MENU_ACCENT];
 
+const openGuiMenu = () => openMenu(MENU_GUI);
+const closeGuiMenu = () => closeMenu(MENU_GUI);
+const guiMenuOpen = state => state.scratchGui.menus[MENU_GUI];
+
 const openBlocksThemeMenu = () => openMenu(MENU_BLOCKS_THEME);
 const closeBlocksThemeMenu = () => closeMenu(MENU_BLOCKS_THEME);
 const blocksThemeMenuOpen = state => state.scratchGui.menus[MENU_BLOCKS_THEME];
+
+const openPersonalizationMenu = () => openMenu(MENU_PERSONALIZATION);
+const closePersonalizationMenu = () => closeMenu(MENU_PERSONALIZATION);
+const personalizationMenuOpen = state => state.scratchGui.menus[MENU_PERSONALIZATION];
 
 const openErrorsMenu = () => openMenu(MENU_ERRORS);
 const closeErrorsMenu = () => closeMenu(MENU_ERRORS);
@@ -190,9 +204,15 @@ export {
     openAccentMenu,
     closeAccentMenu,
     accentMenuOpen,
+    openGuiMenu,
+    closeGuiMenu,
+    guiMenuOpen,
     openBlocksThemeMenu,
     closeBlocksThemeMenu,
     blocksThemeMenuOpen,
+    openPersonalizationMenu,
+    closePersonalizationMenu,
+    personalizationMenuOpen,
     openErrorsMenu,
     closeErrorsMenu,
     errorsMenuOpen

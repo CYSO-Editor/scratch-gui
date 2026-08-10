@@ -5,6 +5,7 @@ import Box from '../box/box.jsx';
 import Modal from '../../containers/modal.jsx';
 import SecurityModals from '../../lib/tw-security-manager-constants';
 import LoadExtensionModal from './load-extension.jsx';
+import BatchLoadExtensions from './batch-load-extensions.jsx';
 import FetchModal from './fetch.jsx';
 import OpenWindowModal from './open-window.jsx';
 import RedirectModal from './redirect.jsx';
@@ -15,6 +16,7 @@ import Notify from './notify.jsx';
 import Geolocate from './geolocate.jsx';
 import Embed from './embed.jsx';
 import Download from './download.jsx';
+import CustomPermission from './custom-permission.jsx';
 import DelayedMountPropertyHOC from './delayed-mount-property-hoc.jsx';
 import styles from './security-manager-modal.css';
 
@@ -29,70 +31,88 @@ const messages = defineMessages({
 
 const noop = () => {};
 
-const SecurityManagerModalComponent = props => (
-    <Modal
-        className={styles.modalContent}
-        onRequestClose={props.enableButtons ? props.onDenied : noop}
-        contentLabel={props.intl.formatMessage(messages.title)}
-        id="securitymanagermodal"
-    >
-        <Box className={styles.body}>
-            {props.type === SecurityModals.LoadExtension ? (
-                <LoadExtensionModal {...props.data} />
-            ) : props.type === SecurityModals.Fetch ? (
-                <FetchModal {...props.data} />
-            ) : props.type === SecurityModals.OpenWindow ? (
-                <OpenWindowModal {...props.data} />
-            ) : props.type === SecurityModals.Redirect ? (
-                <RedirectModal {...props.data} />
-            ) : props.type === SecurityModals.RecordAudio ? (
-                <RecordAudio {...props.data} />
-            ) : props.type === SecurityModals.RecordVideo ? (
-                <RecordVideo {...props.data} />
-            ) : props.type === SecurityModals.ReadClipboard ? (
-                <ReadClipboard {...props.data} />
-            ) : props.type === SecurityModals.Notify ? (
-                <Notify {...props.data} />
-            ) : props.type === SecurityModals.Geolocate ? (
-                <Geolocate {...props.data} />
-            ) : props.type === SecurityModals.Embed ? (
-                <Embed {...props.data} />
-            ) : props.type === SecurityModals.Download ? (
-                <Download {...props.data} />
-            ) : null}
+const SecurityManagerModalComponent = props => {
+    
+    if (props.type === SecurityModals.BatchLoadExtensions) {
+        return (
+            <BatchLoadExtensions
+                {...props.data}
+                isDarkMode={props.isDarkMode}
+                enableButtons={props.enableButtons}
+                onAllowed={props.onAllowed}
+                onDenied={props.onDenied}
+            />
+        );
+    }
 
-            <Box className={styles.buttons}>
-                <button
-                    className={styles.denyButton}
-                    onClick={props.onDenied}
-                    disabled={!props.enableButtons}
-                >
-                    <FormattedMessage
-                        defaultMessage="Deny"
-                        description="Button in modal asking user for permission to load extension, access file, etc."
-                        id="tw.securityManager.deny"
-                    />
-                </button>
-                <button
-                    className={styles.allowButton}
-                    onClick={props.onAllowed}
-                    disabled={!props.enableButtons}
-                >
-                    <FormattedMessage
-                        defaultMessage="Allow"
-                        description="Button in modal asking user for permission to load extension, access file, etc."
-                        id="tw.securityManager.allow"
-                    />
-                </button>
+    return (
+        <Modal
+            className={styles.modalContent}
+            onRequestClose={props.enableButtons ? props.onDenied : noop}
+            contentLabel={props.intl.formatMessage(messages.title)}
+            id="securitymanagermodal"
+        >
+            <Box className={styles.body}>
+                {props.type === SecurityModals.LoadExtension ? (
+                    <LoadExtensionModal {...props.data} />
+                ) : props.type === SecurityModals.Fetch ? (
+                    <FetchModal {...props.data} />
+                ) : props.type === SecurityModals.OpenWindow ? (
+                    <OpenWindowModal {...props.data} />
+                ) : props.type === SecurityModals.Redirect ? (
+                    <RedirectModal {...props.data} />
+                ) : props.type === SecurityModals.RecordAudio ? (
+                    <RecordAudio {...props.data} />
+                ) : props.type === SecurityModals.RecordVideo ? (
+                    <RecordVideo {...props.data} />
+                ) : props.type === SecurityModals.ReadClipboard ? (
+                    <ReadClipboard {...props.data} />
+                ) : props.type === SecurityModals.Notify ? (
+                    <Notify {...props.data} />
+                ) : props.type === SecurityModals.Geolocate ? (
+                    <Geolocate {...props.data} />
+                ) : props.type === SecurityModals.Embed ? (
+                    <Embed {...props.data} />
+                ) : props.type === SecurityModals.Download ? (
+                    <Download {...props.data} />
+                ) : props.type === SecurityModals.CustomPermission ? (
+                    <CustomPermission {...props.data} />
+                ) : null}
+
+                <Box className={styles.buttons}>
+                    <button
+                        className={styles.denyButton}
+                        onClick={props.onDenied}
+                        disabled={!props.enableButtons}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Deny"
+                            description="Button in modal asking user for permission to load extension, access file, etc."
+                            id="tw.securityManager.deny"
+                        />
+                    </button>
+                    <button
+                        className={styles.allowButton}
+                        onClick={props.onAllowed}
+                        disabled={!props.enableButtons}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Allow"
+                            description="Button in modal asking user for permission to load extension, access file, etc."
+                            id="tw.securityManager.allow"
+                        />
+                    </button>
+                </Box>
             </Box>
-        </Box>
-    </Modal>
-);
+        </Modal>
+    );
+};
 
 SecurityManagerModalComponent.propTypes = {
     intl: intlShape,
     type: PropTypes.oneOf(Object.values(SecurityModals)),
     enableButtons: PropTypes.bool,
+    isDarkMode: PropTypes.bool,
     // Each modal may have different type of data
     // eslint-disable-next-line react/forbid-prop-types
     data: PropTypes.object.isRequired,

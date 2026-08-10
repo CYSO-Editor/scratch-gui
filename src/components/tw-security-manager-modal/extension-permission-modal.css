@@ -1,0 +1,332 @@
+@import "../../css/colors.css";
+@import "../../css/units.css";
+
+.modalEnhanced {
+    max-width: 520px;
+    width: 92%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.25);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) {
+    background: #ffffff;
+}
+
+.dark {
+    background: #1a1d24;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modalBody {
+    padding: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modalBody::-webkit-scrollbar { width: 4px; }
+.modalBody::-webkit-scrollbar-track { background: transparent; }
+
+.modalEnhanced:not(.dark) .modalBody::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+.dark .modalBody::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
+
+.header {
+    padding: 1.5rem 1.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) .header {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.iconWrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) .iconWrapper { background: #f3f4f6; }
+.dark .iconWrapper { background: rgba(255, 255, 255, 0.06); }
+
+.extensionIcon { font-size: 1.5rem; }
+
+.titleSection { flex: 1; min-width: 0; }
+
+.title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.01em;
+}
+
+.modalEnhanced:not(.dark) .title { color: #111827; }
+.dark .title { color: #f3f4f6; }
+
+.extensionName {
+    font-size: 0.875rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+.modalEnhanced:not(.dark) .extensionName { color: #6b7280; }
+.dark .extensionName { color: #9ca3af; }
+
+.closeBtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.modalEnhanced:not(.dark) .closeBtn { color: #9ca3af; }
+.dark .closeBtn { color: #6b7280; }
+
+.closeBtn:hover { transform: scale(1.05); }
+
+.modalEnhanced:not(.dark) .closeBtn:hover { background: #f3f4f6; color: #374151; }
+.dark .closeBtn:hover { background: rgba(255, 255, 255, 0.08); color: #d1d5db; }
+
+.permissionsContainer {
+    padding: 1.25rem 1.75rem;
+    flex: 1;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.modalEnhanced:not(.dark) .sectionHeader { color: #6b7280; }
+.dark .sectionHeader { color: #6b7280; }
+
+.sectionIcon { font-size: 1rem; }
+
+.permissionCount {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.1875rem 0.5625rem;
+    border-radius: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) .permissionCount {
+    color: #9ca3af;
+    background: #f3f4f6;
+}
+.dark .permissionCount {
+    color: #9ca3af;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.permissionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.permissionCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8125rem 1rem;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.modalEnhanced:not(.dark) .permissionCard { background: #f9fafb; }
+.modalEnhanced:not(.dark) .permissionCard:hover { background: #f3f4f6; }
+
+.dark .permissionCard { background: rgba(255, 255, 255, 0.03); }
+.dark .permissionCard:hover { background: rgba(255, 255, 255, 0.06); }
+
+.permLeft {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.groupEmoji { font-size: 1.25rem; flex-shrink: 0; }
+
+.permInfo { flex: 1; min-width: 0; }
+
+.permTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.4375rem;
+}
+
+.permName {
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.modalEnhanced:not(.dark) .permName { color: #111827; }
+.dark .permName { color: #e5e7eb; }
+
+.helpCircle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.625rem;
+    font-weight: 700;
+    cursor: help;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.modalEnhanced:not(.dark) .helpCircle { background: #e5e7eb; color: #6b7280; }
+.modalEnhanced:not(.dark) .helpCircle:hover { background: #d1d5db; color: #374151; }
+
+.dark .helpCircle { background: rgba(255, 255, 255, 0.12); color: #9ca3af; }
+.dark .helpCircle:hover { background: rgba(255, 255, 255, 0.2); color: #d1d5db; transform: scale(1.1); }
+
+.riskBadge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.1875rem 0.5625rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.riskLow { background: #ecfdf5; color: #059669; }
+.riskMedium { background: #fffbeb; color: #d97706; }
+.riskHigh { background: #fef2f2; color: #dc2626; }
+
+.dark .riskLow { background: rgba(16, 185, 129, 0.12); color: #34d399; }
+.dark .riskMedium { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+.dark .riskHigh { background: rgba(239, 68, 68, 0.12); color: #fca5a5; }
+
+.noticeBox {
+    margin: 0 1.75rem 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border-left: 3px solid;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) .noticeBox {
+    background: #f9fafb;
+    border-left-color: #d1d5db;
+    color: #6b7280;
+}
+
+.dark .noticeBox {
+    background: rgba(255, 255, 255, 0.03);
+    border-left-color: rgba(255, 255, 255, 0.15);
+    color: #9ca3af;
+}
+
+.noticeIcon { font-size: 1rem; flex-shrink: 0; }
+
+.prunedBox {
+    margin: 0 1.75rem 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border-left: 3px solid;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.modalEnhanced:not(.dark) .prunedBox {
+    background: #fef2f2;
+    border-left-color: #fca5a5;
+    color: #b91c1c;
+}
+
+.dark .prunedBox {
+    background: rgba(239, 68, 68, 0.08);
+    border-left-color: rgba(248, 113, 113, 0.4);
+    color: #fca5a5;
+}
+
+.actions {
+    padding: 0 1.75rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.confirmButton {
+    padding: 0.5625rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 140px;
+}
+
+.modalEnhanced:not(.dark) .confirmButton { background: #111827; color: white; }
+.modalEnhanced:not(.dark) .confirmButton:hover { background: #374151; }
+.modalEnhanced:not(.dark) .confirmButton:active { background: #000000; }
+
+.dark .confirmButton { background: #3b82f6; color: white; }
+.dark .confirmButton:hover { background: #60a5fa; }
+.dark .confirmButton:active { background: #2563eb; }
+
+@media (max-width: 640px) {
+    .modalEnhanced { width: 96%; border-radius: 10px; }
+    .header { padding: 1.25rem 1.25rem 1rem; }
+    .iconWrapper { width: 38px; height: 38px; }
+    .extensionIcon { font-size: 1.375rem; }
+    .title { font-size: 1rem; }
+    .permissionCard { flex-direction: column; align-items: stretch; gap: 0.625rem; padding: 0.875rem; }
+    .noticeBox { margin: 0 1.25rem 1rem; }
+    .actions { padding: 0 1.25rem 1.25rem; }
+    .confirmButton { width: 100%; }
+}

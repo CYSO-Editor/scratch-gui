@@ -15,6 +15,8 @@ import TargetPane from '../../containers/target-pane.jsx';
 import SoundTab from '../../containers/sound-tab.jsx';
 import StageWrapper from '../../containers/stage-wrapper.jsx';
 import Loader from '../loader/loader.jsx';
+import AuroraSplash from '../loader/aurora-splash.jsx';
+import LoaderBridge from '../loader/loader-bridge.jsx';
 import Box from '../box/box.jsx';
 import MenuBar from '../menu-bar/menu-bar.jsx';
 import CostumeLibrary from '../../containers/costume-library.jsx';
@@ -38,10 +40,11 @@ import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import TWWindChimeSubmitter from '../../containers/tw-windchime-submitter.jsx';
+import CYSOCoreCenter from '../../containers/tw-cyso-core-center.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/layout-constants';
 import {resolveStageSize} from '../../lib/screen-utils';
-import {Theme} from '../../lib/themes';
+import {Theme, GUI_MISTY_SAND} from '../../lib/themes';
 
 import {isRendererSupported, isBrowserSupported} from '../../lib/tw-environment-support-prober';
 
@@ -102,6 +105,7 @@ const GUIComponent = props => {
         costumeLibraryVisible,
         costumesTabVisible,
         customStageSize,
+        cysoCoreEnabled,
         enableCommunity,
         intl,
         isCreating,
@@ -162,6 +166,9 @@ const GUIComponent = props => {
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
+
+    const isMistySand = theme && theme.gui === GUI_MISTY_SAND;
+
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
     }
@@ -188,6 +195,7 @@ const GUIComponent = props => {
                 <TWSecurityManager securityManager={securityManager} />
                 <TWRestorePointManager />
                 <TWWindChimeSubmitter isEmbedded={isEmbedded} />
+                <CYSOCoreCenter />
                 {usernameModalVisible && <TWUsernameModal />}
                 {settingsModalVisible && <TWSettingsModal />}
                 {customExtensionModalVisible && <TWCustomExtensionModal />}
@@ -212,6 +220,7 @@ const GUIComponent = props => {
                 ) : null}
                 <StageWrapper
                     isFullScreen={isFullScreen}
+                    isMistySand={isMistySand}
                     isEmbedded={isEmbedded}
                     isRendererSupported={isRendererSupported()}
                     isRtl={isRtl}
@@ -247,9 +256,8 @@ const GUIComponent = props => {
                         onShowPrivacyPolicy={onShowPrivacyPolicy}
                     />
                 ) : null}
-                {loading ? (
-                    <Loader isFullScreen />
-                ) : null}
+                <LoaderBridge vm={vm} />
+                <AuroraSplash active={loading} />
                 {isCreating ? (
                     <Loader
                         isFullScreen
@@ -303,6 +311,7 @@ const GUIComponent = props => {
                     canSave={canSave}
                     canShare={canShare}
                     className={styles.menuBarPosition}
+                    cysoCoreEnabled={cysoCoreEnabled}
                     enableCommunity={enableCommunity}
                     isShared={isShared}
                     isTotallyNormal={isTotallyNormal}
@@ -434,12 +443,18 @@ const GUIComponent = props => {
                             ) : null}
                         </Box>
 
-                        <Box className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}>
+                        <Box className={classNames(
+                            styles.stageAndTargetWrapper, 
+                            styles[stageSize],
+                            {[styles.minimized]: stageSizeMode === STAGE_SIZE_MODES.minimized}
+                        )}>
                             <StageWrapper
                                 isFullScreen={isFullScreen}
+                                isMistySand={isMistySand}
                                 isRendererSupported={isRendererSupported()}
                                 isRtl={isRtl}
                                 stageSize={stageSize}
+                                stageSizeMode={stageSizeMode}
                                 vm={vm}
                             />
                             <Box className={styles.targetWrapper}>
@@ -539,6 +554,7 @@ GUIComponent.propTypes = {
     usernameModalVisible: PropTypes.bool,
     settingsModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
+    cysoCoreEnabled: PropTypes.bool,
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,

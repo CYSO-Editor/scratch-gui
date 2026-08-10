@@ -17,6 +17,11 @@ const SET_HAS_CLOUD_VARIABLES = 'tw/SET_HAS_CLOUD_VARIABLES';
 const SET_CLOUD_HOST = 'tw/SET_CLOUD_HOST';
 const SET_PLATFORM_MISMATCH_DETAILS = 'tw/SET_PLATFORM_MISMATCH_DETAILS';
 const SET_PROJECT_ERROR = 'tw/SET_PROJECT_ERROR';
+const SET_CYSO_CORE_ENABLED = 'tw/SET_CYSO_CORE_ENABLED';
+const SET_DEFAULT_PERMISSION = 'tw/SET_DEFAULT_PERMISSION';
+const SET_EXTENSION_PERMISSION = 'tw/SET_EXTENSION_PERMISSION';
+const REGISTER_EXTENSION_PERMISSIONS = 'tw/REGISTER_EXTENSION_PERMISSIONS';
+const ADD_LOADED_EXTENSION = 'tw/ADD_LOADED_EXTENSION';
 
 export const initialState = {
     framerate: 30,
@@ -52,7 +57,11 @@ export const initialState = {
         platform: null,
         callback: null
     },
-    projectError: null
+    projectError: null,
+    cysoCoreEnabled: false,
+    defaults: {},
+    extensionPermissions: {},
+    loadedExtensions: []
 };
 
 const reducer = function (state, action) {
@@ -140,6 +149,62 @@ const reducer = function (state, action) {
         return Object.assign({}, state, {
             projectError: action.projectError
         });
+    case SET_CYSO_CORE_ENABLED:
+        return Object.assign({}, state, {
+            cysoCoreEnabled: action.cysoCoreEnabled
+        });
+    case SET_DEFAULT_PERMISSION:
+        return Object.assign({}, state, {
+            defaults: Object.assign({}, state.defaults, {
+                [action.permissionType]: action.setting
+            })
+        });
+    case SET_EXTENSION_PERMISSION:
+        {
+            const extId = action.extensionId;
+            const extMap = Object.assign({}, state.extensionPermissions[extId]);
+            extMap[action.permissionType] = action.setting;
+            return Object.assign({}, state, {
+                extensionPermissions: Object.assign({}, state.extensionPermissions, {
+                    [extId]: extMap
+                })
+            });
+        }
+    case REGISTER_EXTENSION_PERMISSIONS:
+        return Object.assign({}, state, {
+            extensionPermissions: Object.assign({}, state.extensionPermissions, {
+                [action.extensionId]: action.permissions
+            })
+        });
+    case ADD_LOADED_EXTENSION:
+        {
+            const existingIndex = state.loadedExtensions.findIndex(ext => ext.id === action.extensionId);
+            if (existingIndex >= 0) {
+                const updatedExtensions = [...state.loadedExtensions];
+                updatedExtensions[existingIndex] = {
+                    ...updatedExtensions[existingIndex],
+                    name: action.extensionName,
+                    icon: action.extensionIcon || updatedExtensions[existingIndex].icon,
+                    color: action.extensionColor || updatedExtensions[existingIndex].color,
+                    permissions: action.permissions
+                };
+                return Object.assign({}, state, {
+                    loadedExtensions: updatedExtensions
+                });
+            }
+            return Object.assign({}, state, {
+                loadedExtensions: [
+                    ...state.loadedExtensions,
+                    {
+                        id: action.extensionId,
+                        name: action.extensionName,
+                        icon: action.extensionIcon,
+                        color: action.extensionColor,
+                        permissions: action.permissions
+                    }
+                ]
+            });
+        }
     default:
         return state;
     }
@@ -278,6 +343,49 @@ const setProjectError = function (projectError) {
     };
 };
 
+const setCYSOCoreEnabled = function (cysoCoreEnabled) {
+    return {
+        type: SET_CYSO_CORE_ENABLED,
+        cysoCoreEnabled
+    };
+};
+
+const setDefaultPermission = function (permissionType, setting) {
+    return {
+        type: SET_DEFAULT_PERMISSION,
+        permissionType,
+        setting
+    };
+};
+
+const setExtensionPermission = function (extensionId, permissionType, setting) {
+    return {
+        type: SET_EXTENSION_PERMISSION,
+        extensionId,
+        permissionType,
+        setting
+    };
+};
+
+const registerExtensionPermissions = function (extensionId, permissions) {
+    return {
+        type: REGISTER_EXTENSION_PERMISSIONS,
+        extensionId,
+        permissions
+    };
+};
+
+const addLoadedExtension = function (extensionId, extensionName, permissions, extensionIcon, extensionColor) {
+    return {
+        type: ADD_LOADED_EXTENSION,
+        extensionId,
+        extensionName,
+        permissions,
+        extensionIcon,
+        extensionColor
+    };
+};
+
 export {
     reducer as default,
     initialState as twInitialState,
@@ -299,5 +407,10 @@ export {
     setHasCloudVariables,
     setCloudHost,
     setPlatformMismatchDetails,
-    setProjectError
+    setProjectError,
+    setCYSOCoreEnabled,
+    setDefaultPermission,
+    setExtensionPermission,
+    registerExtensionPermissions,
+    addLoadedExtension
 };

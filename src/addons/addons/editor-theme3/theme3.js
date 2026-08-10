@@ -90,20 +90,20 @@ export default async function ({ addon, console, msg }) {
   };
 
   const secondaryColor = (primary) => {
-    if (isColoredTextMode()) return alphaBlend(primaryColor(primary), multiply(primary, { a: 0.15 }));
-    if (textMode() === "black") return brighten(primary, { r: 0.6, g: 0.6, b: 0.6 });
-    return multiply(primary, { r: 0.9, g: 0.9, b: 0.9 });
+    if (isColoredTextMode()) return removeAlpha(alphaBlend(primaryColor(primary), multiply(primary, { a: 0.15 })));
+    if (textMode() === "black") return removeAlpha(brighten(primary, { r: 0.6, g: 0.6, b: 0.6 }));
+    return removeAlpha(multiply(primary, { r: 0.9, g: 0.9, b: 0.9 }));
   };
 
   const tertiaryColor = (primary) => {
-    if (isColoredTextMode()) return primary;
-    if (textMode() === "black") return multiply(primary, { r: 0.65, g: 0.65, b: 0.65 });
-    return multiply(primary, { r: 0.8, g: 0.8, b: 0.8 });
+    if (isColoredTextMode()) return removeAlpha(primary);
+    if (textMode() === "black") return removeAlpha(multiply(primary, { r: 0.65, g: 0.65, b: 0.65 }));
+    return removeAlpha(multiply(primary, { r: 0.8, g: 0.8, b: 0.8 }));
   };
 
   const quaternaryColor = (primary) => {
-    if (isColoredTextMode()) return alphaBlend(primaryColor(primary), multiply(primary, { a: 0.25 }));
-    if (textMode() === "black") return brighten(primaryColor(primary), { r: 0.4, g: 0.4, b: 0.4 });
+    if (isColoredTextMode()) return removeAlpha(alphaBlend(primaryColor(primary), multiply(primary, { a: 0.25 })));
+    if (textMode() === "black") return removeAlpha(brighten(primaryColor(primary), { r: 0.4, g: 0.4, b: 0.4 }));
     return tertiaryColor(primary);
   };
 
@@ -134,7 +134,7 @@ export default async function ({ addon, console, msg }) {
 
   const textFieldText = () => {
     const black = textMode() === 'black' ? '#000000' : undefined;
-    return textColor(addon.settings.get("input-color"), black);
+    return textColor(removeAlpha(addon.settings.get("input-color")), black);
   };
 
   const fieldTextColor = (field) => {
@@ -317,7 +317,7 @@ export default async function ({ addon, console, msg }) {
     const blockColors = JSON.parse(JSON.stringify(defaultBlockColors));
 
     for (const category of categories) {
-      const primary = addon.settings.get(category.settingId);
+      const primary = removeAlpha(addon.settings.get(category.settingId));
       blockColors[category.colorId] = {
         primary: primaryColor(primary),
         secondary: secondaryColor(primary),
@@ -326,7 +326,7 @@ export default async function ({ addon, console, msg }) {
       };
     }
     blockColors.text = uncoloredTextColor();
-    blockColors.textField = addon.settings.get("input-color");
+    blockColors.textField = removeAlpha(addon.settings.get("input-color"));
     blockColors.textFieldText = textFieldText();
     if (textMode() === "colorOnWhite") blockColors.fieldShadow = "rgba(0, 0, 0, 0.15)";
 

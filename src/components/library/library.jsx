@@ -216,31 +216,27 @@ class LibraryComponent extends React.Component {
         }
 
         if (this.state.filterQuery) {
+            const query = this.state.filterQuery.toLowerCase();
             filteredItems = filteredItems.filter(dataItem => {
-                const search = [...dataItem.tags];
-                if (dataItem.name) {
-                    // Use the name if it is a string, else use formatMessage to get the translated name
-                    if (typeof dataItem.name === 'string') {
-                        search.push(dataItem.name);
-                    } else {
-                        search.push(this.props.intl.formatMessage(dataItem.name.props, {
-                            APP_NAME
-                        }));
+                const search = [...(dataItem.tags || [])];
+                const addSearchText = value => {
+                    if (!value) {
+                        return;
                     }
-                }
-                if (dataItem.description) {
-                    if (typeof dataItem.description === 'string') {
-                        search.push(dataItem.description);
-                    } else {
-                        search.push(this.props.intl.formatMessage(dataItem.description.props, {
-                            APP_NAME
-                        }));
+                    if (typeof value === 'string') {
+                        search.push(value);
+                    } else if (value.props && value.props.id) {
+                        search.push(this.props.intl.formatMessage(value.props, {APP_NAME}));
+                    } else if (value.defaultMessage) {
+                        search.push(value.defaultMessage);
                     }
-                }
+                };
+                addSearchText(dataItem.name);
+                addSearchText(dataItem.description);
                 return search
                     .join('\n')
                     .toLowerCase()
-                    .includes(this.state.filterQuery.toLowerCase());
+                    .includes(query);
             });
         }
 

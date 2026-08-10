@@ -49,8 +49,8 @@ const StageComponent = props => {
                     {[styles.withColorPicker]: !isFullScreen && isColorPicking})}
                 onDoubleClick={onDoubleClick}
                 style={isPlayerOnly ? null : {
-                    // add 2 because a 1px border is shown around each side of the stage
-                    minWidth: `${minWidth + 2}px`
+                    
+                    width: `${stageDimensions.width + 2}px`
                 }}
             >
                 <Box
@@ -174,4 +174,4 @@ StageComponent.propTypes = {
 StageComponent.defaultProps = {
     dragRef: () => {}
 };
-export default StageComponent;
+export default React.memo(StageComponent);

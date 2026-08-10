@@ -15,7 +15,15 @@ const decodeDataURI = dataURI => {
     const data = dataURI.substring(delimeter + 1);
     if (contentType.endsWith(';base64')) {
         try {
-            return atob(data);
+            
+            const binaryString = atob(data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            const decoder = new TextDecoder('utf-8');
+            return decoder.decode(bytes);
         } catch (e) {
             return dataURI;
         }

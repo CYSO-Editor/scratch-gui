@@ -8,7 +8,7 @@
 $z-index-extension-button: 42;
 $z-index-stage-indicator: 45;
 $z-index-add-button: 46;
-$z-index-tooltip: 47; /* tooltips should go over add buttons if they overlap */
+$z-index-tooltip: 47;
 $z-index-monitor: 48; /* monitors go over add buttons */
 $z-index-stage-question: 49; /* "ask" block text input goes above monitors */
 

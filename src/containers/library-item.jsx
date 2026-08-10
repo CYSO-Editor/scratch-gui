@@ -5,6 +5,24 @@ import {injectIntl, intlShape, defineMessages} from 'react-intl';
 
 import LibraryItemComponent from '../components/library-item/library-item.jsx';
 
+const LIBRARY_CDN_HOSTS = [
+    'https://cdn.assets.scratch.mit.edu',
+    'https://assets.scratch.mit.edu'
+];
+
+const LOCAL_LIBRARY_PATH = '/library-assets';
+
+const getLibraryAssetURL = (md5ext, cdnIndex = 0) => {
+    if (!md5ext) {
+        return null;
+    }
+    if (cdnIndex === 0) {
+        return `${LOCAL_LIBRARY_PATH}/${md5ext}`;
+    }
+    const host = LIBRARY_CDN_HOSTS[cdnIndex - 1] || LIBRARY_CDN_HOSTS[0];
+    return `${host}/internalapi/asset/${md5ext}/get/`;
+};
+
 const messages = defineMessages({
     incompatible: {
         // eslint-disable-next-line max-len
@@ -29,11 +47,13 @@ class LibraryItem extends React.PureComponent {
             'handleStop',
             'rotateIcon',
             'startRotatingIcons',
-            'stopRotatingIcons'
+            'stopRotatingIcons',
+            'handleImageError'
         ]);
         this.state = {
             iconIndex: 0,
-            isRotatingIcon: false
+            isRotatingIcon: false,
+            cdnIndex: 0
         };
     }
     componentWillUnmount () {
@@ -59,11 +79,9 @@ class LibraryItem extends React.PureComponent {
         }
 
         if (!this.props.disabled) {
-            if (this.props.href) {
-                window.open(this.props.href);
-            } else {
-                this.props.onSelect(this.props.id);
-            }
+            
+            
+            this.props.onSelect(this.props.id);
         }
         e.preventDefault();
     }
@@ -124,6 +142,14 @@ class LibraryItem extends React.PureComponent {
         const nextIconIndex = (this.state.iconIndex + 1) % this.props.icons.length;
         this.setState({iconIndex: nextIconIndex});
     }
+    handleImageError () {
+        const maxIndex = LIBRARY_CDN_HOSTS.length;
+        if (this.state.cdnIndex < maxIndex) {
+            this.setState(prevState => ({
+                cdnIndex: prevState.cdnIndex + 1
+            }));
+        }
+    }
     curIconMd5 () {
         const iconMd5Prop = this.props.iconMd5;
         if (this.props.icons &&
@@ -139,7 +165,7 @@ class LibraryItem extends React.PureComponent {
     render () {
         const iconMd5 = this.curIconMd5();
         const iconURL = iconMd5 ?
-            `https://cdn.assets.scratch.mit.edu/internalapi/asset/${iconMd5}/get/` :
+            getLibraryAssetURL(iconMd5, this.state.cdnIndex) :
             this.props.iconRawURL;
         return (
             <LibraryItemComponent
@@ -151,6 +177,7 @@ class LibraryItem extends React.PureComponent {
                 extensionId={this.props.extensionId}
                 featured={this.props.featured}
                 hidden={this.props.hidden}
+                href={this.props.href}
                 iconURL={iconURL}
                 icons={this.props.icons}
                 id={this.props.id}
@@ -172,6 +199,7 @@ class LibraryItem extends React.PureComponent {
                 onMouseLeave={this.handleMouseLeave}
                 onPlay={this.handlePlay}
                 onStop={this.handleStop}
+                onImageError={this.handleImageError}
             />
         );
     }
@@ -209,7 +237,11 @@ LibraryItem.propTypes = {
     ]),
     credits: PropTypes.arrayOf(PropTypes.oneOfType([
         PropTypes.string,
-        PropTypes.node
+        PropTypes.node,
+        PropTypes.shape({
+            name: PropTypes.string,
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        })
     ])),
     docsURI: PropTypes.string,
     samples: PropTypes.arrayOf(PropTypes.shape({

@@ -10,18 +10,33 @@ export default async function ({ addon, console }) {
 
   Blockly.BlockSvg.prototype.CAT_BLOCKS = true;
 
-  Blockly.BlockSvg.START_HAT_HEIGHT = 31;
+  Object.defineProperty(Blockly.BlockSvg, 'START_HAT_HEIGHT', {
+    value: 31,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
 
-  Blockly.BlockSvg.START_HAT_PATH =
-    "c2.6,-2.3 5.5,-4.3 8.5,-6.2" +
-    "c-1,-12.5 5.3,-23.3 8.4,-24.8c3.7,-1.8 16.5,13.1 18.4,15.4" +
-    "c8.4,-1.3 17,-1.3 25.4,0c1.9,-2.3 14.7,-17.2 18.4,-15.4" +
-    "c3.1,1.5 9.4,12.3 8.4,24.8c3,1.8 5.9,3.9 8.5,6.1";
+  Object.defineProperty(Blockly.BlockSvg, 'START_HAT_PATH', {
+    value:
+      "c2.6,-2.3 5.5,-4.3 8.5,-6.2" +
+      "c-1,-12.5 5.3,-23.3 8.4,-24.8c3.7,-1.8 16.5,13.1 18.4,15.4" +
+      "c8.4,-1.3 17,-1.3 25.4,0c1.9,-2.3 14.7,-17.2 18.4,-15.4" +
+      "c3.1,1.5 9.4,12.3 8.4,24.8c3,1.8 5.9,3.9 8.5,6.1",
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
 
-  Blockly.BlockSvg.TOP_LEFT_CORNER_DEFINE_HAT =
-    "c0,-7.1 3.7,-13.3 9.3,-16.9c1.7,-7.5 5.4,-13.2 7.6,-14.2" +
-    "c2.6,-1.3 10,6 14.6,11.1h33c4.6,-5.1 11.9,-12.4 14.6,-11.1" +
-    "c1.9,0.9 4.9,5.2 6.8,11.1c2.6,0,5.2,0,7.8,0";
+  Object.defineProperty(Blockly.BlockSvg, 'TOP_LEFT_CORNER_DEFINE_HAT', {
+    value:
+      "c0,-7.1 3.7,-13.3 9.3,-16.9c1.7,-7.5 5.4,-13.2 7.6,-14.2" +
+      "c2.6,-1.3 10,6 14.6,11.1h33c4.6,-5.1 11.9,-12.4 14.6,-11.1" +
+      "c1.9,0.9 4.9,5.2 6.8,11.1c2.6,0,5.2,0,7.8,0",
+    writable: true,
+    enumerable: true,
+    configurable: true
+  });
 
   Blockly.BlockSvg.prototype.renderCatFace_ = function () {
     this.catPath_.svgFace.setAttribute("fill", "#000000");

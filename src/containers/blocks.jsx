@@ -44,6 +44,7 @@ import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/tw-load-scratch-blocks-hoc.jsx';
 import {findTopBlock} from '../lib/backpack/code-payload.js';
 import {gentlyRequestPersistentStorage} from '../lib/tw-persistent-storage.js';
+import {fetchCode} from '../lib/backpack-api.js';
 
 // TW: Strings we add to scratch-blocks are localized here
 const messages = defineMessages({
@@ -85,6 +86,31 @@ const addFunctionListener = (object, property, callback) => {
 const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
+
+
+const ensureBuiltinExtensionRegistrations = (Blockly) => {
+    if (!Blockly || !Blockly.Extensions || typeof Blockly.Extensions.register !== 'function') {
+        return;
+    }
+    const needed = {
+        'from_extension': function () {
+            this.isFromExtension = true;
+        },
+        'default_extension_colors': function () {
+            this.usesDefaultExtensionColors = true;
+        },
+        'scratch_extension': function () {
+            this.isScratchExtension = true;
+        }
+    };
+    for (const name in needed) {
+        try {
+            Blockly.Extensions.register(name, needed[name]);
+        } catch (e) {
+            
+        }
+    }
+};
 
 class Blocks extends React.Component {
     constructor (props) {
@@ -136,6 +162,18 @@ class Blocks extends React.Component {
     }
     componentDidMount () {
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
+        ensureBuiltinExtensionRegistrations(this.ScratchBlocks);
+
+        const em = this.props.vm && this.props.vm.extensionManager;
+        if (em && typeof em.loadExtensionURL === 'function' && !em.__cysoEnsureRegPatched) {
+            const originalLoadExtensionURL = em.loadExtensionURL.bind(em);
+            em.loadExtensionURL = (url) => {
+                ensureBuiltinExtensionRegistrations(this.ScratchBlocks);
+                return originalLoadExtensionURL(url);
+            };
+            em.__cysoEnsureRegPatched = true;
+        }
+
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
@@ -164,6 +202,20 @@ class Blocks extends React.Component {
             },
             Blocks.defaultOptions
         );
+
+        const themeBlockColors = this.props.theme.getBlockColors();
+        for (const checkboxKey of [
+            'checkboxInactiveBackground',
+            'checkboxInactiveBorder',
+            'checkboxActiveBackground',
+            'checkboxActiveBorder',
+            'checkboxCheck'
+        ]) {
+            if (typeof themeBlockColors[checkboxKey] === 'string' && themeBlockColors[checkboxKey]) {
+                this.ScratchBlocks.Colours[checkboxKey] = themeBlockColors[checkboxKey];
+            }
+        }
+
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         AddonHooks.blocklyWorkspace = this.workspace;
 
@@ -317,6 +369,13 @@ class Blocks extends React.Component {
 
     updateToolbox () {
         this.toolboxUpdateTimeout = false;
+
+        // Toolbox may be mid-rebuild (e.g. switching to the my-blocks category);
+        // defer a refresh if it is not ready yet.
+        if (!this.workspace || !this.workspace.toolbox_) {
+            this.requestToolboxUpdate();
+            return;
+        }
 
         const categoryId = this.workspace.toolbox_.getSelectedCategoryId();
         const offset = this.workspace.toolbox_.getCategoryScrollOffset();
@@ -634,8 +693,7 @@ class Blocks extends React.Component {
         ws.toolbox_.scrollToCategoryById('myBlocks');
     }
     handleDrop (dragInfo) {
-        fetch(dragInfo.payload.bodyUrl)
-            .then(response => response.json())
+        fetchCode(dragInfo.payload.bodyUrl)
             .then(payload => {
                 // based on https://github.com/ScratchAddons/ScratchAddons/pull/7028
                 const topBlock = findTopBlock(payload);
@@ -659,7 +717,25 @@ class Blocks extends React.Component {
             });
     }
     handleEnableProcedureReturns () {
-        this.workspace.enableProcedureReturns();
+        if (typeof this.workspace.enableProcedureReturns === 'function') {
+            this.workspace.enableProcedureReturns();
+        } else if (this.workspace) {
+            this.workspace.procedureReturnsEnabled = true;
+        }
+
+        this.withToolboxUpdates(() => {
+            const ws = this.workspace;
+            if (ws && ws.toolbox_) {
+                ws.toolbox_.setSelectedCategoryById('myBlocks');
+                if (typeof ws.refreshToolboxSelection_ === 'function') {
+                    ws.refreshToolboxSelection_();
+                }
+                if (ws.toolbox_.scrollToCategoryById) {
+                    ws.toolbox_.scrollToCategoryById('myBlocks');
+                }
+            }
+        });
+
         this.requestToolboxUpdate();
     }
     render () {
@@ -747,7 +823,9 @@ Blocks.propTypes = {
     isRtl: PropTypes.bool,
     isVisible: PropTypes.bool,
     locale: PropTypes.string.isRequired,
-    messages: PropTypes.objectOf(PropTypes.string),
+    
+    
+    messages: PropTypes.object,
     onActivateColorPicker: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,

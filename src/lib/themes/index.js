@@ -4,9 +4,12 @@ import * as accentPurple from './accent/purple';
 import * as accentBlue from './accent/blue';
 import * as accentRed from './accent/red';
 import * as accentRainbow from './accent/rainbow';
+import * as accentBlueCyan from './accent/blue-cyan';
 
 import * as guiLight from './gui/light';
 import * as guiDark from './gui/dark';
+import * as guiAurora from './gui/aurora';
+import * as guiMistySand from './gui/misty-sand';
 
 import * as blocksThree from './blocks/three';
 import * as blocksHighContrast from './blocks/high-contrast';
@@ -16,21 +19,27 @@ const ACCENT_PURPLE = 'purple';
 const ACCENT_BLUE = 'blue';
 const ACCENT_RED = 'red';
 const ACCENT_RAINBOW = 'rainbow';
+const ACCENT_BLUE_CYAN = 'blue-cyan';
 const ACCENT_MAP = {
     [ACCENT_PURPLE]: accentPurple,
     [ACCENT_BLUE]: accentBlue,
     [ACCENT_RED]: accentRed,
-    [ACCENT_RAINBOW]: accentRainbow
+    [ACCENT_RAINBOW]: accentRainbow,
+    [ACCENT_BLUE_CYAN]: accentBlueCyan
 };
-const ACCENT_DEFAULT = ACCENT_RED;
+const ACCENT_DEFAULT = ACCENT_BLUE_CYAN;
 
 const GUI_LIGHT = 'light';
 const GUI_DARK = 'dark';
+const GUI_AURORA = 'aurora';
+const GUI_MISTY_SAND = 'misty-sand';
 const GUI_MAP = {
     [GUI_LIGHT]: guiLight,
-    [GUI_DARK]: guiDark
+    [GUI_DARK]: guiDark,
+    [GUI_AURORA]: guiAurora,
+    [GUI_MISTY_SAND]: guiMistySand
 };
-const GUI_DEFAULT = GUI_LIGHT;
+const GUI_DEFAULT = GUI_AURORA;
 
 const BLOCKS_THREE = 'three';
 const BLOCKS_DARK = 'dark';
@@ -150,10 +159,13 @@ export {
     ACCENT_PURPLE,
     ACCENT_BLUE,
     ACCENT_RAINBOW,
+    ACCENT_BLUE_CYAN,
     ACCENT_MAP,
 
     GUI_LIGHT,
     GUI_DARK,
+    GUI_AURORA,
+    GUI_MISTY_SAND,
     GUI_MAP,
 
     BLOCKS_THREE,

@@ -60,12 +60,15 @@ class CustomExtensionModal extends React.Component {
 
         if (this.state.type === 'file') {
             const files = Array.from(this.state.files);
-            return Promise.all(files.map(readAsDataURL));
+            return Promise.all(files.map(async file => {
+                const dataUrl = await readAsDataURL(file);
+                return dataUrl.replace(/^data:[^;]*/, 'data:application/javascript;charset=utf-8');
+            }));
         }
 
         if (this.state.type === 'text') {
             return Promise.resolve([
-                `data:application/javascript,${encodeURIComponent(this.state.text)}`
+                `data:application/javascript;charset=utf-8,${encodeURIComponent(this.state.text)}`
             ]);
         }
 

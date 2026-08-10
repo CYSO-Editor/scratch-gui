@@ -10,6 +10,23 @@
     min-width: 186px;
     overflow: visible;
     box-shadow: 0 8px 8px 0 $shadow;
+    
+    transform-origin: top;
+    animation: menuSlideDown 0.3s ease-out;
+    opacity: 1;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+@keyframes menuSlideDown {
+    0% {
+        transform: scaleY(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
 }
 
 .menu.left {
@@ -29,12 +46,21 @@
     margin: 0;
     font-weight: bold;
     position: relative;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    will-change: transform;
 }
 
 .menu-item.active,
 .menu-item:hover,
 .menu-item.expanded {
     background-color: $ui-black-transparent;
+    transform: translateX(4px);
+}
+
+[dir="rtl"] .menu-item.active,
+[dir="rtl"] .menu-item:hover,
+[dir="rtl"] .menu-item.expanded {
+    transform: translateX(-4px);
 }
 
 .menu-item.hoverable {
@@ -53,6 +79,36 @@
     height: max-content;
     overflow: hidden;
     border-radius: 8px;
+    
+    transform-origin: left;
+    animation: submenuSlideRight 0.25s ease-out;
+}
+
+[dir="rtl"] .submenu {
+    transform-origin: right;
+    animation: submenuSlideLeft 0.25s ease-out;
+}
+
+@keyframes submenuSlideRight {
+    0% {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+@keyframes submenuSlideLeft {
+    0% {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scaleX(1);
+        opacity: 1;
+    }
 }
 
 .submenu.right {

@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {connect} from 'react-redux';
 import VM from 'scratch-vm';
 
 import Box from '../box/box.jsx';
@@ -18,6 +17,7 @@ import largeStageIcon from '!../../lib/tw-recolor/build!./icon--large-stage.svg'
 import smallStageIcon from '!../../lib/tw-recolor/build!./icon--small-stage.svg';
 import fullStageIcon from '!../../lib/tw-recolor/build!./icon--full-stage.svg';
 import settingsIcon from './icon--settings.svg';
+import minimizeIcon from './icon--minimize.svg';
 
 import styles from './stage-header.css';
 
@@ -58,6 +58,16 @@ const messages = defineMessages({
         defaultMessage: 'Open advanced settings',
         description: 'Button to open advanced settings in embeds',
         id: 'tw.openAdvanced'
+    },
+    minimizeStageMessage: {
+        defaultMessage: 'Minimize stage',
+        description: 'Button to minimize stage',
+        id: 'gui.stageHeader.minimizeStage'
+    },
+    restoreStageMessage: {
+        defaultMessage: 'Restore stage',
+        description: 'Button to restore minimized stage',
+        id: 'gui.stageHeader.restoreStage'
     }
 });
 
@@ -75,6 +85,7 @@ const StageHeaderComponent = function (props) {
         onSetStageLarge,
         onSetStageSmall,
         onSetStageFull,
+        onSetStageMinimized,
         onOpenSettings,
         isEmbedded,
         stageSize,
@@ -157,6 +168,8 @@ const StageHeaderComponent = function (props) {
             </Box>
         );
     } else {
+        const isMinimized = stageSizeMode === STAGE_SIZE_MODES.minimized;
+        
         const stageControls =
             isPlayerOnly ? (
                 []
@@ -195,31 +208,47 @@ const StageHeaderComponent = function (props) {
             <Box
                 className={styles.stageHeaderWrapper}
                 // + 2 px because the stage will have 2 pixels of border around it
-                style={{minWidth: `${stageDimensions.width + 2}px`}}
+                style={{minWidth: isMinimized ? 'auto' : `${stageDimensions.width + 2}px`}}
             >
                 <Box className={styles.stageMenuWrapper}>
-                    <Controls
-                        vm={vm}
-                        isSmall={stageSizeMode === STAGE_SIZE_MODES.small}
-                    />
+                    {!isMinimized && (
+                        <Controls
+                            vm={vm}
+                            isSmall={stageSizeMode === STAGE_SIZE_MODES.small}
+                        />
+                    )}
                     <div
                         className={styles.stageSizeRow}
                         key="editor" // addons require the HTML element to be not be re-used by in-editor buttons
                     >
-                        {stageControls}
-                        <div>
+                        {!isMinimized && stageControls}
+                        <div className={styles.stageButtonRow}>
                             <Button
                                 className={styles.stageButton}
-                                onClick={onSetStageFullScreen}
+                                onClick={isMinimized ? onSetStageFull : onSetStageMinimized}
                             >
                                 <img
-                                    alt={props.intl.formatMessage(messages.fullStageSizeMessage)}
+                                    alt={props.intl.formatMessage(isMinimized ? messages.restoreStageMessage : messages.minimizeStageMessage)}
                                     className={styles.stageButtonIcon}
                                     draggable={false}
-                                    src={fullScreenIcon}
-                                    title={props.intl.formatMessage(messages.fullscreenControl)}
+                                    src={minimizeIcon}
+                                    title={props.intl.formatMessage(isMinimized ? messages.restoreStageMessage : messages.minimizeStageMessage)}
                                 />
                             </Button>
+                            {!isMinimized && (
+                                <Button
+                                    className={styles.stageButton}
+                                    onClick={onSetStageFullScreen}
+                                >
+                                    <img
+                                        alt={props.intl.formatMessage(messages.fullStageSizeMessage)}
+                                        className={styles.stageButtonIcon}
+                                        draggable={false}
+                                        src={fullScreenIcon}
+                                        title={props.intl.formatMessage(messages.fullscreenControl)}
+                                    />
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </Box>
@@ -229,11 +258,6 @@ const StageHeaderComponent = function (props) {
 
     return header;
 };
-
-const mapStateToProps = state => ({
-    // This is the button's mode, as opposed to the actual current state
-    stageSizeMode: state.scratchGui.stageSize.stageSize
-});
 
 StageHeaderComponent.propTypes = {
     intl: intlShape,
@@ -250,6 +274,7 @@ StageHeaderComponent.propTypes = {
     onSetStageLarge: PropTypes.func.isRequired,
     onSetStageSmall: PropTypes.func.isRequired,
     onSetStageFull: PropTypes.func.isRequired,
+    onSetStageMinimized: PropTypes.func.isRequired,
     onOpenSettings: PropTypes.func.isRequired,
     isEmbedded: PropTypes.bool.isRequired,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)),
@@ -261,6 +286,4 @@ StageHeaderComponent.defaultProps = {
     stageSizeMode: STAGE_SIZE_MODES.large
 };
 
-export default injectIntl(connect(
-    mapStateToProps
-)(StageHeaderComponent));
+export default injectIntl(StageHeaderComponent);

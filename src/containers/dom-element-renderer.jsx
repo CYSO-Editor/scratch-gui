@@ -19,24 +19,30 @@ class DOMElementRenderer extends React.Component {
         this.setContainer = this.setContainer.bind(this);
     }
     componentDidMount () {
-        this.container.appendChild(this.props.domElement);
+        if (this.props.domElement) {
+            this.container.appendChild(this.props.domElement);
+        }
     }
     componentWillUnmount () {
-        this.container.removeChild(this.props.domElement);
+        if (this.props.domElement && this.container) {
+            try {
+                this.container.removeChild(this.props.domElement);
+            } catch (e) {
+            }
+        }
     }
     setContainer (c) {
         this.container = c;
     }
     render () {
-        // Apply props to the DOM element, so its attributes
-        // are updated as if it were a normal component.
-        // Look at me, I'm the React now!
+        if (!this.props.domElement) {
+            return <div ref={this.setContainer} />;
+        }
         Object.assign(
             this.props.domElement,
             omit(this.props, ['domElement', 'children', 'style'])
         );
 
-        // Convert react style prop to dom element styling.
         if (this.props.style) {
             this.props.domElement.style.cssText = Style.string(this.props.style);
         }

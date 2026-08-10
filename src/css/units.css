@@ -2,6 +2,11 @@
 e.g. STAGE_DIMENSION_DEFAULTS in lib/screen-utils.js */
 
 $space: 0.5rem;
+$space-xs: 0.25rem;
+$space-sm: 0.5rem;
+$space-md: 0.75rem;
+$space-lg: 1rem;
+$space-xl: 1.5rem;
 
 $sprites-per-row: 5;
 
@@ -27,3 +32,16 @@ $menu-bar-large-font-size: 0.875rem;
 $menu-bar-button-size: 2rem;
 
 $menu-bar-item-max-width: 12rem;
+
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-pill: 999px;
+
+$shadow-card: 0 2px 8px rgba(0, 0, 0, 0.10);
+$shadow-raised: 0 4px 12px rgba(0, 0, 0, 0.12);
+$shadow-pop: 0 10px 30px rgba(20, 35, 60, 0.18);
+
+$ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out: cubic-bezier(0.16, 1, 0.3, 1);

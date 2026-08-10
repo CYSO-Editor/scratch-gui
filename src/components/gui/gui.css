@@ -49,7 +49,7 @@
     */
     flex-basis: calc(1024px - 408px - (($space + $stage-standard-border-width) * 2));
     flex-grow: 1;
-    flex-shrink: 0;
+    flex-shrink: 1;
     position: relative;
 
     display: flex;
@@ -79,7 +79,7 @@
     height: 80%;
     margin-bottom: 0;
 
-    border-radius: 1rem 1rem 0 0;
+    border-radius: $radius-md $radius-md 0 0;
     border: 1px solid $ui-black-transparent;
 
     padding: 0.125rem 1.25rem 0;
@@ -94,6 +94,8 @@
 
     user-select: none;
     white-space: nowrap;
+    transition: transform 0.2s $ease-standard, box-shadow 0.2s $ease-standard, background-color 0.2s $ease-standard, height 0.2s $ease-standard;
+    box-shadow: $shadow-card;
 }
 
 [dir="ltr"] .tab {
@@ -124,7 +126,8 @@
 }
 
 .tab:hover {
-  background-color: $ui-primary;
+    background-color: $ui-primary;
+    box-shadow: $shadow-raised;
 }
 
 .tab.is-selected {
@@ -132,11 +135,14 @@
     color: $looks-secondary;
     background-color: $ui-white;
     z-index: 4; /* Make sure selected is always above */
+    box-shadow: $shadow-raised;
+    border-bottom: 2px solid $looks-secondary;
 }
 
 .tab img {
     width: 1.375rem;
     filter: grayscale(100%);
+    transition: filter 0.2s ease, transform 0.2s ease;
 }
 
 [dir="ltr"] .tab img {
@@ -158,6 +164,7 @@
 
 .tab.is-selected img {
     filter: none;
+    transform: scale(1.1);
 }
 
 /* Tab style overrides from react-tabs */
@@ -191,6 +198,16 @@
 
 .tab-panel.is-selected {
     display: flex;
+    animation: tabFadeIn 0.15s ease-out;
+}
+
+@keyframes tabFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 
 .blocks-wrapper {
@@ -215,12 +232,16 @@
 
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
+    align-items: flex-end;
 }
 
 .target-wrapper {
     display: flex;
     flex-grow: 1;
     flex-basis: 0;
+    flex-shrink: 1;
+    width: 100%;
+    justify-content: flex-end;
 
     padding-top: $space;
     min-height: 0; /* this makes it work in Firefox */
@@ -231,6 +252,15 @@
     */
     /* TODO this also breaks the thermometer menu */
     /* overflow: hidden; */
+}
+
+.stage-and-target-wrapper.minimized {
+    flex-basis: auto;
+    width: auto;
+}
+
+.stage-and-target-wrapper.minimized .target-wrapper {
+    display: none;
 }
 
 .extension-button-container {
@@ -245,6 +275,11 @@
 
     border: 1px solid $looks-secondary;
     box-sizing: content-box; /* To match scratch-block vertical toolbox borders */
+    border-radius: $radius-md $radius-md 0 0;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    will-change: transform;
+    contain: layout style;
 }
 
 $fade-out-distance: 15px;
@@ -259,6 +294,11 @@ $fade-out-distance: 15px;
     width: calc(100% + 0.5px);
 }
 
+.extension-button-container:hover {
+    background: #66d9e8;
+    border-color: #66d9e8;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+}
 
 .extension-button {
     background: none;
@@ -268,15 +308,29 @@ $fade-out-distance: 15px;
     height: 100%;
     cursor: pointer;
     user-select: none;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.extension-button:hover {
+    transform: scale(1.05);
 }
 
 .extension-button-icon {
     width: 1.75rem;
     height: 1.75rem;
+    transition: transform 0.3s ease;
+}
+
+.extension-button:hover .extension-button-icon {
+    transform: rotate(15deg) scale(1.1);
 }
 
 [dir="rtl"] .extension-button-icon {
     transform: scaleX(-1);
+}
+
+[dir="rtl"] .extension-button:hover .extension-button-icon {
+    transform: scaleX(-1) rotate(15deg) scale(1.1);
 }
 
 .extension-button > div {
@@ -333,4 +387,15 @@ $fade-out-distance: 15px;
     height: 100%;
     /* overridden by JS; this will be used if the browser can't understand that color */
     background-color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
 }

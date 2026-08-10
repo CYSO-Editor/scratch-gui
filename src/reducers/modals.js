@@ -1,5 +1,7 @@
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
+const OPEN_CYSO_CORE_CENTER = 'modals/OPEN_CYSO_CORE_CENTER';
+const CLOSE_CYSO_CORE_CENTER = 'modals/CLOSE_CYSO_CORE_CENTER';
 
 const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
 const MODAL_COSTUME_LIBRARY = 'costumeLibrary';
@@ -18,6 +20,7 @@ const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
+const MODAL_CYSO_CORE_CENTER = 'cysoCoreCenter';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -36,7 +39,8 @@ const initialState = {
     [MODAL_RESTORE_POINTS]: false,
     [MODAL_FONTS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
-    [MODAL_INVALID_PROJECT]: false
+    [MODAL_INVALID_PROJECT]: false,
+    [MODAL_CYSO_CORE_CENTER]: false
 };
 
 const reducer = function (state, action) {
@@ -49,6 +53,14 @@ const reducer = function (state, action) {
     case CLOSE_MODAL:
         return Object.assign({}, state, {
             [action.modal]: false
+        });
+    case OPEN_CYSO_CORE_CENTER:
+        return Object.assign({}, state, {
+            [MODAL_CYSO_CORE_CENTER]: true
+        });
+    case CLOSE_CYSO_CORE_CENTER:
+        return Object.assign({}, state, {
+            [MODAL_CYSO_CORE_CENTER]: false
         });
     default:
         return state;
@@ -168,6 +180,12 @@ const closeUnknownPlatformModal = function () {
 const closeInvalidProjectModal = function () {
     return closeModal(MODAL_INVALID_PROJECT);
 };
+const openCYSOCoreCenter = function () {
+    return { type: OPEN_CYSO_CORE_CENTER };
+};
+const closeCYSOCoreCenter = function () {
+    return { type: CLOSE_CYSO_CORE_CENTER };
+};
 export {
     reducer as default,
     initialState as modalsInitialState,
@@ -204,5 +222,7 @@ export {
     closeRestorePointModal,
     closeFontsModal,
     closeUnknownPlatformModal,
-    closeInvalidProjectModal
+    closeInvalidProjectModal,
+    openCYSOCoreCenter,
+    closeCYSOCoreCenter
 };

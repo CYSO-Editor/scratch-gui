@@ -27,14 +27,16 @@ import DeletionRestorer from '../../containers/deletion-restorer.jsx';
 import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
+import PersonalizationMenu from './tw-personalization.jsx';
 
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
+import CYSOCoreButton from './cyso-core-button.jsx';
 
-import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
+import {openTipsLibrary, openSettingsModal, openRestorePointModal, openCYSOCoreCenter} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
@@ -75,6 +77,9 @@ import {
     settingsMenuOpen,
     openSettingsMenu,
     closeSettingsMenu,
+    personalizationMenuOpen,
+    openPersonalizationMenu,
+    closePersonalizationMenu,
     errorsMenuOpen,
     openErrorsMenu,
     closeErrorsMenu
@@ -90,7 +95,7 @@ import mystuffIcon from './icon--mystuff.png';
 import profileIcon from './icon--profile.png';
 import remixIcon from './icon--remix.svg';
 import dropdownCaret from './dropdown-caret.svg';
-import aboutIcon from './icon--about.svg';
+import cysoSoftwareIcon from './icon--cyso-software.svg';
 import fileIcon from './icon--file.svg';
 import editIcon from './icon--edit.svg';
 import addonsIcon from './addons.svg';
@@ -180,9 +185,9 @@ MenuItemTooltip.propTypes = {
 
 const AboutButton = props => (
     <Button
-        className={classNames(styles.menuBarItem, styles.hoverable)}
+        className={classNames(styles.menuBarItem, styles.hoverable, styles.aboutButton)}
         iconClassName={styles.aboutIcon}
-        iconSrc={aboutIcon}
+        iconSrc={cysoSoftwareIcon}
         onClick={props.onClick}
     />
 );
@@ -410,7 +415,7 @@ class MenuBar extends React.Component {
             >
                 <img
                     className={styles.aboutIcon}
-                    src={aboutIcon}
+                    src={cysoSoftwareIcon}
                     draggable={false}
                 />
                 <MenuBarMenu
@@ -552,12 +557,8 @@ class MenuBar extends React.Component {
                                 this.props.onClickDesktopSettings &&
                                 this.handleClickDesktopSettings
                             }
-                            // eslint-disable-next-line react/jsx-no-bind
-                            onOpenCustomSettings={
-                                this.props.onClickAddonSettings &&
-                                this.props.onClickAddonSettings.bind(null, 'editor-theme3')
-                            }
                             onRequestClose={this.props.onRequestCloseSettings}
+                            onClickPersonalization={this.props.onClickPersonalization}
                             onRequestOpen={this.props.onClickSettings}
                             settingsMenuOpen={this.props.settingsMenuOpen}
                         />)}
@@ -1040,6 +1041,22 @@ class MenuBar extends React.Component {
                     />
                 </div>
 
+                {this.props.cysoCoreEnabled && (
+                    <CYSOCoreButton
+                        visible={this.props.cysoCoreEnabled}
+                        onClick={this.props.onClickCYSOCoreCenter}
+                        isDarkMode={this.props.isDarkMode}
+                    />
+                )}
+
+                {this.props.canChangeTheme && (
+                    <PersonalizationMenu
+                        open={this.props.personalizationMenuOpen}
+                        onClose={this.props.onRequestClosePersonalization}
+                        onClickAddonSettings={this.props.onClickAddonSettings}
+                    />
+                )}
+
                 {aboutButton}
             </Box>
         );
@@ -1072,6 +1089,7 @@ MenuBar.propTypes = {
     canSave: PropTypes.bool,
     canShare: PropTypes.bool,
     className: PropTypes.string,
+    cysoCoreEnabled: PropTypes.bool,
     errors: PropTypes.arrayOf(PropTypes.shape({
         sprite: PropTypes.string,
         error: PropTypes.string,
@@ -1112,6 +1130,7 @@ MenuBar.propTypes = {
     ]),
     onClickAccount: PropTypes.func,
     onClickAddonSettings: PropTypes.func,
+    onClickCYSOCoreCenter: PropTypes.func,
     onClickDesktopSettings: PropTypes.func,
     onClickPackager: PropTypes.func,
     onClickRestorePoints: PropTypes.func,
@@ -1148,6 +1167,9 @@ MenuBar.propTypes = {
     renderLogin: PropTypes.func,
     sessionExists: PropTypes.bool,
     settingsMenuOpen: PropTypes.bool,
+    personalizationMenuOpen: PropTypes.bool,
+    onClickPersonalization: PropTypes.func,
+    onRequestClosePersonalization: PropTypes.func,
     shouldSaveBeforeTransition: PropTypes.func,
     showSaveFilePicker: PropTypes.func,
     showComingSoon: PropTypes.bool,
@@ -1163,6 +1185,7 @@ MenuBar.defaultProps = {
 const mapStateToProps = (state, ownProps) => {
     const loadingState = state.scratchGui.projectState.loadingState;
     const user = state.session && state.session.session && state.session.session.user;
+    const theme = state.scratchGui.theme && state.scratchGui.theme.theme;
     return {
         authorUsername: state.scratchGui.tw.author.username,
         authorThumbnailUrl: state.scratchGui.tw.author.thumbnail,
@@ -1170,6 +1193,8 @@ const mapStateToProps = (state, ownProps) => {
         aboutMenuOpen: aboutMenuOpen(state),
         accountMenuOpen: accountMenuOpen(state),
         currentLocale: state.locales.locale,
+    cysoCoreEnabled: state.scratchGui.tw.cysoCoreEnabled,
+    isDarkMode: theme ? theme.isDark() : false,
         fileMenuOpen: fileMenuOpen(state),
         editMenuOpen: editMenuOpen(state),
         errors: state.scratchGui.tw.compileErrors,
@@ -1184,6 +1209,7 @@ const mapStateToProps = (state, ownProps) => {
         projectTitle: state.scratchGui.projectTitle,
         sessionExists: state.session && typeof state.session.session !== 'undefined',
         settingsMenuOpen: settingsMenuOpen(state),
+        personalizationMenuOpen: personalizationMenuOpen(state),
         username: user ? user.username : null,
         userOwnsProject: ownProps.authorUsername && user &&
             (ownProps.authorUsername === user.username),
@@ -1199,6 +1225,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => ({
     onClickSeeInside: () => dispatch(setPlayer(false)),
     autoUpdateProject: () => dispatch(autoUpdateProject()),
+    onClickCYSOCoreCenter: () => dispatch(openCYSOCoreCenter()),
     onOpenTipLibrary: () => dispatch(openTipsLibrary()),
     onClickAccount: () => dispatch(openAccountMenu()),
     onRequestCloseAccount: () => dispatch(closeAccountMenu()),
@@ -1221,6 +1248,8 @@ const mapDispatchToProps = dispatch => ({
         dispatch(openSettingsModal());
     },
     onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
+    onClickPersonalization: () => dispatch(openPersonalizationMenu()),
+    onRequestClosePersonalization: () => dispatch(closePersonalizationMenu()),
     onClickNew: needSave => {
         dispatch(requestNewProject(needSave));
         dispatch(setFileHandle(null));

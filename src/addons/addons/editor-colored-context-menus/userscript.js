@@ -1,4 +1,4 @@
-import { removeAlpha } from "../../libraries/common/cs/text-color.esm.js";
+import { removeAlpha, multiply, textColor } from "../../libraries/common/cs/text-color.esm.js";
 
 export default async function ({ addon, console }) {
   const ScratchBlocks = await addon.tab.traps.getBlockly();
@@ -13,8 +13,14 @@ export default async function ({ addon, console }) {
       return;
     }
     const fill = removeAlpha(background.getAttribute("fill"));
-    const border = background.getAttribute("stroke") || "#0003";
-    const text = ScratchBlocks.Colours.text;
+    if (!fill || fill.charAt(0) !== "#") {
+      return;
+    }
+    const stroke = background.getAttribute("stroke");
+    const border = stroke && stroke.charAt(0) === "#" && stroke.length >= 7
+      ? removeAlpha(stroke)
+      : removeAlpha(multiply(fill, { r: 0.6, g: 0.6, b: 0.6 }));
+    const text = textColor(fill);
     widgetDiv.classList.add("sa-contextmenu-colored");
     widgetDiv.style.setProperty("--sa-contextmenu-bg", fill);
     widgetDiv.style.setProperty("--sa-contextmenu-border", border);

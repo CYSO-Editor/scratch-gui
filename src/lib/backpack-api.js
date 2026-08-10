@@ -113,6 +113,41 @@ const updateBackpackObject = ({
 // Two types of backpack items are not retreivable through storage
 // code, as json and sprite3 as arraybuffer zips.
 const fetchAs = (responseType, uri) => new Promise((resolve, reject) => {
+    // Local backpack items use data: URLs (see tw-local-backpack-api.js).
+    // Decoding them directly avoids Content-Security-Policy restrictions that
+    // block fetch()/XHR of data: URLs (e.g. "connect-src" without "data:").
+    const dataMatch = /^data:([^;,]*)(;base64)?,(.*)$/s.exec(uri);
+    if (dataMatch) {
+        try {
+            const isBase64 = Boolean(dataMatch[2]);
+            const raw = dataMatch[3];
+            if (responseType === 'json') {
+                let text;
+                if (isBase64) {
+                    const binary = atob(raw);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) {
+                        bytes[i] = binary.charCodeAt(i);
+                    }
+                    text = new TextDecoder('utf-8').decode(bytes);
+                } else {
+                    text = decodeURIComponent(raw);
+                }
+                return resolve(JSON.parse(text));
+            }
+            if (responseType === 'arraybuffer') {
+                const binary = atob(raw);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    bytes[i] = binary.charCodeAt(i);
+                }
+                return resolve(bytes.buffer);
+            }
+            // Other responseTypes are not expected for data: URLs; fall through.
+        } catch (e) {
+            return reject(e);
+        }
+    }
     xhr({uri, responseType}, (error, response) => {
         if (error || response.statusCode !== 200) {
             return reject(new Error(response.status));

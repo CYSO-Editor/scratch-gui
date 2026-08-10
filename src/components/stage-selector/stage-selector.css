@@ -10,6 +10,8 @@ $header-height: calc($stage-menu-height - 2px);
     align-items: center;
     position: relative; /* For the add backdrop button */
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 60px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     background-color: $ui-white;
     color: $text-primary;
