@@ -50,7 +50,20 @@ const isInvalidEmbed = window.parent !== window;
 const handleClickAddonSettings = addonId => {
     // addonId might be a string of the addon to focus on, undefined, or an event (treat like undefined)
     const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-    const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+    const isDarkMode = typeof document !== 'undefined' && (
+        document.documentElement.classList.contains('tw-misty-sand-dark') ||
+        document.documentElement.classList.contains('tw-dark-theme')
+    );
+    const isMistySand = typeof document !== 'undefined' &&
+        document.documentElement.classList.contains('tw-misty-sand-theme');
+    const params = new URLSearchParams();
+    if (isDarkMode) {
+        params.set('dark', '1');
+    }
+    params.set('gui', isMistySand ? 'misty-sand' : 'light');
+    const query = params.toString();
+    const hash = typeof addonId === 'string' ? `#${addonId}` : '';
+    const url = `${process.env.ROOT}${path}${query ? `?${query}` : ''}${hash}`;
     window.open(url);
 };
 

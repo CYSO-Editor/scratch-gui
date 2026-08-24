@@ -38,6 +38,8 @@ import CYSOCoreButton from './cyso-core-button.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal, openCYSOCoreCenter} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
+import {GUI_MISTY_SAND} from '../../lib/themes';
+import {getCurrent as getCustomTheme} from '../../lib/themes/customTheme';
 import {
     isTimeTravel220022BC,
     isTimeTravel1920,
@@ -1194,7 +1196,10 @@ const mapStateToProps = (state, ownProps) => {
         accountMenuOpen: accountMenuOpen(state),
         currentLocale: state.locales.locale,
     cysoCoreEnabled: state.scratchGui.tw.cysoCoreEnabled,
-    isDarkMode: theme ? theme.isDark() : false,
+    isDarkMode: theme ? (
+        theme.isDark() ||
+            (theme.gui === GUI_MISTY_SAND && !!getCustomTheme().darkMode)
+    ) : false,
         fileMenuOpen: fileMenuOpen(state),
         editMenuOpen: editMenuOpen(state),
         errors: state.scratchGui.tw.compileErrors,

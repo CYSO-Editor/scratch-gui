@@ -77,36 +77,38 @@
     top: -1px;
     min-width: 186px;
     height: max-content;
-    overflow: hidden;
+    overflow: visible;
     border-radius: 8px;
-    
-    transform-origin: left;
-    animation: submenuSlideRight 0.25s ease-out;
+
+    transform-origin: left center;
+    animation: submenuSlideRight 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 [dir="rtl"] .submenu {
-    transform-origin: right;
-    animation: submenuSlideLeft 0.25s ease-out;
+    transform-origin: right center;
+    animation: submenuSlideLeft 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes submenuSlideRight {
     0% {
-        transform: scaleX(0);
+        transform: translateX(-10px) scale(0.96);
         opacity: 0;
     }
     100% {
-        transform: scaleX(1);
+        transform: translateX(0) scale(1);
         opacity: 1;
     }
 }
 
 @keyframes submenuSlideLeft {
     0% {
-        transform: scaleX(0);
+        transform: translateX(10px) scale(0.96);
         opacity: 0;
     }
     100% {
-        transform: scaleX(1);
+        transform: translateX(0) scale(1);
         opacity: 1;
     }
 }
@@ -125,6 +127,7 @@
     overflow-x: hidden;
     scrollbar-color: $menu-bar-foreground $menu-bar-background;
     border-radius: 8px;
+    animation: none;
 }
 
 .menu-item.expanded > .submenu {

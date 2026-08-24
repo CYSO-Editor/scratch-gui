@@ -1,0 +1,328 @@
+.window {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    min-width: 280px;
+    min-height: 200px;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1.5px solid rgba(0, 0, 0, 0.18);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    transition: opacity 0.15s ease, filter 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .window {
+    background: rgba(34, 35, 44, 0.95);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.windowDimmed {
+    opacity: 0.62;
+    filter: blur(0.35px);
+    box-shadow: 0 0 0 2px rgba(90, 140, 230, 0.85), 0 0 18px 2px rgba(90, 140, 230, 0.55), 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .windowDimmed {
+    box-shadow: 0 0 0 2px rgba(150, 185, 255, 0.9), 0 0 20px 2px rgba(150, 185, 255, 0.6), 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.titleBar {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 6px 0 12px;
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .titleBar {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.titleBar:active {
+    cursor: grabbing;
+}
+
+.tabs {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100%;
+    scrollbar-width: thin;
+}
+
+.tabs::-webkit-scrollbar {
+    height: 3px;
+}
+
+.tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 160px;
+    height: 26px;
+    padding: 0 8px 0 10px;
+    margin-right: 4px;
+    border-radius: 6px 6px 0 0;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.65);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    background: transparent;
+    border: none;
+    transition: background-color 0.12s ease;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .tab {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.tab:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tabActive {
+    background: rgba(255, 255, 255, 0.95);
+    color: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    font-weight: 600;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .tabActive {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.tabName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tabIcon {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+}
+
+.tabClose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0.5;
+}
+
+.tabClose:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .tabClose:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.tabs {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tabsDragOver {
+    background: rgba(80, 130, 220, 0.18) !important;
+    box-shadow: inset 0 -2px 0 0 rgba(80, 130, 220, 0.9);
+}
+
+.tabsHint {
+    flex-shrink: 0;
+    margin-left: 4px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(80, 130, 220, 0.2);
+    color: rgba(80, 130, 220, 1);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .tabsHint {
+    color: rgba(140, 180, 255, 1);
+}
+
+.titleBar {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.addTab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .addTab {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.addTab:hover {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .addTab:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.closeButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .closeButton {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.closeButton:hover {
+    background: rgba(220, 80, 80, 0.15);
+    color: #d43a3a;
+}
+
+.content {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+.blocksHost {
+    position: absolute;
+    inset: 0;
+}
+
+.resizeHandle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    z-index: 5;
+}
+
+.resizeHandle::after {
+    content: '';
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid rgba(0, 0, 0, 0.25);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.25);
+    border-radius: 0 0 3px 0;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .resizeHandle::after {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.targetPicker {
+    position: absolute;
+    top: 34px;
+    right: 8px;
+    min-width: 150px;
+    max-height: 240px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    z-index: 20;
+    padding: 4px;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .targetPicker {
+    background: rgba(40, 41, 51, 0.98);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.pickerItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.75);
+    font-size: 12px;
+    cursor: pointer;
+    text-align: left;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .pickerItem {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.pickerItem:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .pickerItem:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.pickerItemDisabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.pickerItemDisabled:hover {
+    background: transparent;
+}

@@ -471,3 +471,34 @@
     .footerBar { flex-direction: column-reverse; gap: 0.75rem; padding: 0.875rem 1.5rem; }
     .doneButton { width: 100%; text-align: center; }
 }
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .fullscreenContainer {
+    background: var(--ui-modal-background) !important;
+    color: var(--ui-modal-foreground) !important;
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .headerSection {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .mainTitle,
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .viewName,
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .groupName {
+    color: var(--ui-modal-foreground) !important;
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .sidebar,
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .footerBar {
+    background: rgba(0, 0, 0, 0.18);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .sidebarTabActive,
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .doneButton {
+    background: var(--link-color) !important;
+    color: #ffffff !important;
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .sidebarTabActive:hover,
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .doneButton:hover {
+    filter: brightness(1.1);
+}
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) .emptyHint {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ui-modal-foreground);
+}

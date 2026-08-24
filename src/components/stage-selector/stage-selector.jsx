@@ -2,11 +2,13 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {defineMessages, intlShape, injectIntl, FormattedMessage} from 'react-intl';
+import {ContextMenuTrigger} from 'react-contextmenu';
 
 import Box from '../box/box.jsx';
 import ActionMenu from '../action-menu/action-menu.jsx';
 import styles from './stage-selector.css';
 import {isRtl} from '@turbowarp/scratch-l10n';
+import {BorderedMenuItem, ContextMenu} from '../context-menu/context-menu.jsx';
 
 import backdropIcon from '../action-menu/icon--backdrop.svg';
 import fileUploadIcon from '../action-menu/icon--file-upload.svg';
@@ -37,6 +39,8 @@ const messages = defineMessages({
     }
 });
 
+const stageContextMenuId = 'stage-selector-context-menu';
+
 const StageSelector = props => {
     const {
         backdropCount,
@@ -51,6 +55,7 @@ const StageSelector = props => {
         onBackdropFileUploadClick,
         onBackdropFileUpload,
         onClick,
+        onCreateWorkspace,
         onMouseEnter,
         onMouseLeave,
         onNewBackdropClick,
@@ -59,17 +64,20 @@ const StageSelector = props => {
         ...componentProps
     } = props;
     return (
-        <Box
-            className={classNames(styles.stageSelector, {
-                [styles.isSelected]: selected,
-                [styles.raised]: raised || dragOver,
-                [styles.receivedBlocks]: receivedBlocks
-            })}
-            componentRef={containerRef}
-            onClick={onClick}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            {...componentProps}
+        <ContextMenuTrigger
+            id={stageContextMenuId}
+            attributes={{
+                className: classNames(styles.stageSelector, {
+                    [styles.isSelected]: selected,
+                    [styles.raised]: raised || dragOver,
+                    [styles.receivedBlocks]: receivedBlocks
+                }),
+                onClick: onClick,
+                onMouseEnter: onMouseEnter,
+                onMouseLeave: onMouseLeave,
+                ...componentProps
+            }}
+            ref={el => containerRef(el && el.elem)}
         >
             <div className={styles.header}>
                 <div className={styles.headerTitle}>
@@ -126,7 +134,16 @@ const StageSelector = props => {
                 tooltipPlace={isRtl(intl.locale) ? 'right' : 'left'}
                 onClick={onNewBackdropClick}
             />
-        </Box>
+            <ContextMenu id={stageContextMenuId}>
+                <BorderedMenuItem onClick={onCreateWorkspace}>
+                    <FormattedMessage
+                        defaultMessage="Create Workspace"
+                        description="Menu item to create a separate workspace window for the stage"
+                        id="tw.stageSelector.createWorkspace"
+                    />
+                </BorderedMenuItem>
+            </ContextMenu>
+        </ContextMenuTrigger>
     );
 };
 
@@ -139,6 +156,7 @@ StageSelector.propTypes = {
     onBackdropFileUpload: PropTypes.func,
     onBackdropFileUploadClick: PropTypes.func,
     onClick: PropTypes.func,
+    onCreateWorkspace: PropTypes.func,
     onEmptyBackdropClick: PropTypes.func,
     onMouseEnter: PropTypes.func,
     onMouseLeave: PropTypes.func,

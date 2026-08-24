@@ -104,7 +104,7 @@ class UsernameModal extends React.Component {
     }
     handleCYSOCoreConfirm () {
         this.props.setCYSOCoreEnabled(true);
-        
+
         if (this.props.vm && this.props.vm.runtime) {
             this.props.vm.runtime.cysoCoreEnabled = true;
         }

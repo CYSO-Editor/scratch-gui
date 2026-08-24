@@ -694,11 +694,6 @@ class TWSecurityManagerComponent extends React.Component {
             .map((url, index) => ({url, index}))
             .filter(({url}) => !isTrustedExtension(url));
 
-        // Decode CYSO sources up front so we get correct ids/names and the real
-        // source code for the detail panel. Remote CYSO extensions are fetched in
-        // parallel (non-blocking on the UI thread); everything else is decoded
-        // synchronously. Heavy permission scanning is intentionally NOT done here
-        // — it happens lazily in the modal for the selected extension only.
         const buildOne = async ({url, index}) => {
             const baseIsCyso = isCYSOModeExtension(url);
             let source = decodeExtensionSource(url);
@@ -818,17 +813,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        const permCheck = this.checkPermission(PERMISSION_TYPES.NETWORK_FETCH);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Fetch, {url});
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -853,17 +837,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        const permCheck = this.checkPermission(PERMISSION_TYPES.NETWORK_OPEN_URL);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.OpenWindow, {url});
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -876,17 +849,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        const permCheck = this.checkPermission(PERMISSION_TYPES.NETWORK_OPEN_URL);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Redirect, {url});
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -896,17 +858,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordAudio () {
-        const permCheck = this.checkPermission(PERMISSION_TYPES.DEVICE_MICROPHONE);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.RecordAudio);
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -919,17 +870,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordVideo () {
-        const permCheck = this.checkPermission(PERMISSION_TYPES.DEVICE_CAMERA);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.RecordVideo);
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -942,17 +882,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canReadClipboard () {
-        const permCheck = this.checkPermission(PERMISSION_TYPES.CLIPBOARD_READ);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.ReadClipboard);
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -965,17 +894,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canNotify () {
-        const permCheck = this.checkPermission(PERMISSION_TYPES.SYSTEM_NOTIFICATION);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Notify);
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -988,17 +906,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canGeolocate () {
-        const permCheck = this.checkPermission(PERMISSION_TYPES.DEVICE_GEOLOCATION);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Geolocate);
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -1014,17 +921,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        const permCheck = this.checkPermission(PERMISSION_TYPES.NETWORK_FETCH);
-
-        if (permCheck.handled && !permCheck.notRequested) {
-            return permCheck.result;
-        }
-
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Embed, {url});
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -1044,17 +940,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        const permCheck = this.checkPermission(PERMISSION_TYPES.FILE_WRITE);
-        
-        if (permCheck.handled) {
-            return permCheck.result;
-        }
-        
-        if (permCheck.ask) {
-            const {showModal} = await this.acquireModalLock();
-            return showModal(SecurityModals.Download, {url, name});
-        }
-        
         if (this.props.cysoCoreEnabled) {
             return true;
         }
@@ -1064,6 +949,11 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     render () {
+        const isDarkMode = typeof document !== 'undefined' && (
+            document.documentElement.classList.contains('tw-misty-sand-dark') ||
+            document.documentElement.classList.contains('tw-dark-theme')
+        );
+
         if (this.state.type) {
             return (
                 <React.Fragment>
@@ -1072,7 +962,7 @@ class TWSecurityManagerComponent extends React.Component {
                         data={this.state.data}
                         onAllowed={this.handleAllowed}
                         onDenied={this.handleDenied}
-                        isDarkMode={this.props.theme ? this.props.theme.isDark() : false}
+                        isDarkMode={isDarkMode}
                         key={this.state.modalCount}
                     />
                     {this.state.showExtensionPermissionModal && (
@@ -1080,7 +970,7 @@ class TWSecurityManagerComponent extends React.Component {
                             extension={this.state.pendingExtension}
                             permissions={this.state.pendingExtension ? this.state.pendingExtension.permissions : []}
                             onClose={this.closeExtensionPermissionModal.bind(this)}
-                            isDarkMode={this.props.theme ? this.props.theme.isDark() : false}
+                            isDarkMode={isDarkMode}
                         />
                     )}
                 </React.Fragment>
@@ -1092,7 +982,7 @@ class TWSecurityManagerComponent extends React.Component {
                 extension={this.state.pendingExtension}
                 permissions={this.state.pendingExtension ? this.state.pendingExtension.permissions : []}
                 onClose={this.closeExtensionPermissionModal.bind(this)}
-                isDarkMode={this.props.theme ? this.props.theme.isDark() : false}
+                isDarkMode={isDarkMode}
             />
             );
         }

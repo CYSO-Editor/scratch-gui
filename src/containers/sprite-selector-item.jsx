@@ -11,6 +11,7 @@ import DragRecognizer from '../lib/drag-recognizer';
 import {getEventXY} from '../lib/touch-utils';
 
 import SpriteSelectorItemComponent from '../components/sprite-selector-item/sprite-selector-item.jsx';
+import {createWorkspaceWindow} from '../reducers/workspace-windows';
 
 class SpriteSelectorItem extends React.PureComponent {
     constructor (props) {
@@ -19,6 +20,7 @@ class SpriteSelectorItem extends React.PureComponent {
             'getCostumeData',
             'setRef',
             'handleClick',
+            'handleCreateWorkspace',
             'handleDelete',
             'handleDuplicate',
             'handleExport',
@@ -30,6 +32,8 @@ class SpriteSelectorItem extends React.PureComponent {
             'handleDrag',
             'handleTouchEnd'
         ]);
+        this.clickCount = 0;
+        this.clickTime = 0;
 
         this.dragRecognizer = new DragRecognizer({
             onDrag: this.handleDrag,
@@ -87,8 +91,19 @@ class SpriteSelectorItem extends React.PureComponent {
     handleClick (e) {
         e.preventDefault();
         if (!this.noClick) {
+            const now = Date.now();
+            this.clickCount = (now - this.clickTime < 500) ? this.clickCount + 1 : 1;
+            this.clickTime = now;
+            if (this.clickCount >= 3) {
+                this.clickCount = 0;
+                this.handleCreateWorkspace();
+                return;
+            }
             this.props.onClick(this.props.id);
         }
+    }
+    handleCreateWorkspace () {
+        this.props.onCreateWorkspace(this.props.id);
     }
     handleDelete (e) {
         e.stopPropagation(); // To prevent from bubbling back to handleClick
@@ -140,6 +155,7 @@ class SpriteSelectorItem extends React.PureComponent {
                 costumeURL={this.getCostumeData()}
                 preventContextMenu={this.dragRecognizer.gestureInProgress()}
                 onClick={this.handleClick}
+                onCreateWorkspace={this.handleCreateWorkspace}
                 onDeleteButtonClick={onDeleteButtonClick ? this.handleDelete : null}
                 onDuplicateButtonClick={onDuplicateButtonClick ? this.handleDuplicate : null}
                 onExportButtonClick={onExportButtonClick ? this.handleExport : null}
@@ -168,6 +184,7 @@ SpriteSelectorItem.propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
     name: PropTypes.any,
     onClick: PropTypes.func,
+    onCreateWorkspace: PropTypes.func.isRequired,
     onDeleteButtonClick: PropTypes.func,
     onRenameButtonClick: PropTypes.func,
     onDrag: PropTypes.func.isRequired,
@@ -187,6 +204,9 @@ const mapStateToProps = (state, {id}) => ({
 const mapDispatchToProps = dispatch => ({
     dispatchSetHoveredSprite: spriteId => {
         dispatch(setHoveredSprite(spriteId));
+    },
+    onCreateWorkspace: targetId => {
+        dispatch(createWorkspaceWindow(targetId));
     },
     onDrag: data => dispatch(updateAssetDrag(data))
 });

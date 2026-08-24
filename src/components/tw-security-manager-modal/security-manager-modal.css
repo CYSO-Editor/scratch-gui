@@ -39,3 +39,23 @@
     background-color: #24cd11;
     color: black;
 }
+
+/* Misty-sand dark (and other dark themes) adaptation */
+.dark {
+    background: var(--ui-modal-background, #1a1d24);
+    color: var(--ui-modal-foreground, #e8e9ee);
+}
+
+.dark .body {
+    background: var(--ui-modal-background, #1a1d24);
+    color: var(--ui-modal-foreground, #e8e9ee);
+}
+
+.dark .deny-button,
+.dark .allow-button {
+    border-color: var(--ui-black-transparent, rgba(255, 255, 255, 0.12));
+}
+
+.dark .allow-button {
+    color: #ffffff;
+}

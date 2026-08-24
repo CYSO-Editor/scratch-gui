@@ -22,7 +22,7 @@ const guiColors = {
     'ui-black-transparent': 'hsla(220, 30%, 30%, 0.12)',
 
     'text-primary': 'hsla(220, 22%, 28%, 1)',
-    'text-primary-transparent': 'hsla(220, 22%, 28%, 0.72)',
+    'text-primary-transparent': 'hsla(220, 22%, 26%, 0.88)',
 
     'motion-primary': 'hsla(205, 80%, 55%, 1)',
     'motion-primary-transparent': 'hsla(205, 80%, 55%, 0.9)',
@@ -80,13 +80,13 @@ const guiColors = {
     'page-background': 'hsla(40, 30%, 96%, 1)',
     'page-foreground': 'hsla(220, 22%, 28%, 1)',
 
-    'project-title-inactive': 'hsla(0, 0%, 100%, 0.4)',
-    'project-title-hover': 'hsla(0, 0%, 100%, 0.7)',
+    'project-title-inactive': 'hsla(0, 0%, 100%, 0.55)',
+    'project-title-hover': 'hsla(0, 0%, 100%, 0.8)',
 
-    'link-color': 'hsla(220, 70%, 45%, 1)',
+    'link-color': 'hsla(220, 70%, 40%, 1)',
 
-    'filter-icon-black': 'none',
-    'filter-icon-gray': 'grayscale(100%)',
+    'filter-icon-black': 'contrast(1.25)',
+    'filter-icon-gray': 'grayscale(100%) contrast(1.4)',
     'filter-icon-white': 'none',
 
     'paint-ui-pane-border': 'hsla(220, 30%, 40%, 0.12)',

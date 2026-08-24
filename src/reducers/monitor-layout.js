@@ -115,7 +115,7 @@ const _resizeMonitorRect = function (state, action) {
 
 const _removeMonitorRect = function (state, action) {
     if (!Object.prototype.hasOwnProperty.call(state.monitors, action.monitorId)) {
-        log.error(`Can't remove monitor, monitor with id ${action.monitorId} does not exist.`);
+        // 监视器已被 RESET_MONITOR_LAYOUT 等清空，这里是无害的重复删除，直接忽略
         return state;
     }
 

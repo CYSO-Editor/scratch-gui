@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './aurora-splash.css';
+import {isScratchDesktop} from '../../lib/isScratchDesktop';
+import {getCurrent as getCustomTheme} from '../../lib/themes/customTheme';
 
 const STATUS_INIT = '正在初始化…';
 const STATUS_PARSE = '正在解析项目…';
@@ -23,6 +25,9 @@ function readTheme() {
         else if (parsed.accent === 'blue') accent = '#4c97ff';
         if (['dark', 'light', 'aurora', 'misty-sand'].indexOf(parsed.gui) !== -1) {
           theme = parsed.gui;
+        }
+        if (theme === 'misty-sand' && getCustomTheme().darkMode) {
+          theme = 'misty-sand-dark';
         }
         } catch (e) {}
     }
@@ -56,6 +61,7 @@ class AuroraSplash extends React.Component {
     this._lastStatus = '';
     this.dir = 'dirR';
     this.lastMilestone = -1;
+    this.hasCompleted = false;
     this.reduceMotion = !!(window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -67,6 +73,9 @@ class AuroraSplash extends React.Component {
   componentDidMount() {
     window.addEventListener('cyso:load-progress', this.onProgress);
     window.addEventListener('cyso:load-done', this.onDone);
+    if (this.props.active && this.shouldShow()) {
+      this.show();
+    }
   }
 
   componentWillUnmount() {
@@ -83,13 +92,40 @@ class AuroraSplash extends React.Component {
       this.progress = 0;
       this.lastMilestone = -1;
       this.lastProgTs = 0;
+      this.hasCompleted = false;
+      this.themeApplied = false;
       if (this.watchdog) {
         clearTimeout(this.watchdog);
         this.watchdog = 0;
       }
+      if (this.shouldShow()) {
+        this.show();
+      }
     } else if (prevProps.active && !this.props.active && this.state.visible) {
       this.onDone();
     }
+  }
+
+  shouldShow() {
+    if (isScratchDesktop() === true && !window.cysoBootDone) return false;
+    return true;
+  }
+
+  show() {
+    this.applyTheme();
+    this.themeApplied = true;
+    this.setState({ visible: true });
+    this.startIndeterminate();
+  }
+
+  startIndeterminate() {
+    if (this.watchdog) {
+      clearTimeout(this.watchdog);
+    }
+    this.goal = Math.max(this.goal, 40);
+    this.setStatus(STATUS_INIT);
+    this.startLoop();
+    this.watchdog = window.setTimeout(() => this.onDone(), 12000);
   }
 
   applyTheme() {
@@ -188,7 +224,8 @@ class AuroraSplash extends React.Component {
   }
 
   onProgress(e) {
-    if (!this.props.active || !window.cysoBootDone) return;
+    if (!this.props.active) return;
+    if (isScratchDesktop() === true && !window.cysoBootDone) return;
     if (!this.themeApplied) {
       this.applyTheme();
       this.themeApplied = true;
@@ -207,13 +244,17 @@ class AuroraSplash extends React.Component {
         `${d.finished}/${d.total})…`);
     }
     this.startLoop();
-    if (this.goal >= 96 && !this.pendingFinish && !this.watchdog) {
-      this.watchdog = window.setTimeout(() => this.onDone(), 10000);
+    if (this.watchdog) {
+      clearTimeout(this.watchdog);
     }
+    this.watchdog = window.setTimeout(() => this.onDone(), 12000);
   }
 
   onDone() {
-    window.dispatchEvent(new CustomEvent('cyso:load-complete'));
+    if (!this.hasCompleted) {
+      this.hasCompleted = true;
+      window.dispatchEvent(new CustomEvent('cyso:load-complete'));
+    }
     if (!this.state.visible) return;
     if (this.watchdog) {
       clearTimeout(this.watchdog);

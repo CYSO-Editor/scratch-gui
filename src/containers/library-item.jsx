@@ -186,6 +186,7 @@ class LibraryItem extends React.PureComponent {
                 isPlaying={this.props.isPlaying}
                 name={this.props.name}
                 credits={this.props.credits}
+                showDetails={this.props.showDetails}
                 docsURI={this.props.docsURI}
                 samples={this.props.samples}
                 favorite={this.props.favorite}
@@ -218,6 +219,7 @@ LibraryItem.propTypes = {
     href: PropTypes.string,
     featured: PropTypes.bool,
     hidden: PropTypes.bool,
+    showDetails: PropTypes.bool,
     iconMd5: PropTypes.string,
     iconRawURL: PropTypes.string,
     icons: PropTypes.arrayOf(
@@ -240,7 +242,8 @@ LibraryItem.propTypes = {
         PropTypes.node,
         PropTypes.shape({
             name: PropTypes.string,
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            homepage: PropTypes.string
         })
     ])),
     docsURI: PropTypes.string,

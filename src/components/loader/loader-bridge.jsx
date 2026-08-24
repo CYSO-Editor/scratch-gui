@@ -5,7 +5,11 @@ class LoaderBridge extends React.Component {
   subscribe() {
     const vm = this.props.vm;
     if (!vm) return;
+    this.lastEmit = 0;
     this.onAsset = (finished, total) => {
+      const now = performance.now();
+      if (now - this.lastEmit < 60 && finished < total) return;
+      this.lastEmit = now;
       window.dispatchEvent(new CustomEvent('cyso:load-progress', {
         detail: {
           finished,

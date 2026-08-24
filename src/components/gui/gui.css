@@ -11,6 +11,17 @@
 .body-wrapper {
     flex-grow: 1;
     background-color: $ui-primary;
+    position: relative;
+}
+
+.workspace-windows-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 470;
 }
 
 .body-wrapper * {
@@ -232,7 +243,7 @@
 
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
-    align-items: flex-end;
+    align-items: center;
 }
 
 .target-wrapper {

@@ -78,7 +78,10 @@ class CYSOCoreCenter extends React.Component {
             return null;
         }
 
-        const isDarkMode = this.props.theme ? this.props.theme.isDark() : false;
+        const isDarkMode = typeof document !== 'undefined' && (
+            document.documentElement.classList.contains('tw-misty-sand-dark') ||
+            document.documentElement.classList.contains('tw-dark-theme')
+        );
 
         return (
             <CYSOCoreCenterModal

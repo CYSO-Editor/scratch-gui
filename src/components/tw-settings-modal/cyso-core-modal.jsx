@@ -16,9 +16,9 @@ const CYSOCoreModal = props => (
                 <div className={styles.dangerZoneHeader}>
                     ⚡ 突破边界，也请保持警惕
                 </div>
-                <div style={{lineHeight: '1.8', marginBottom: '1rem', color: '#d1d5db'}}>
+                <div style={{lineHeight: '1.8', marginBottom: '1rem', color: 'var(--ui-modal-foreground, var(--text-primary))'}}>
                     <p>
-                        您即将开启 <strong style={{color: '#7ec8e3'}}>CYSO Core</strong> 模式——让创意真正挣脱束缚，像应用一样自由驰骋。
+                        您即将开启 <strong style={{color: 'var(--link-color)'}}>CYSO Core</strong> 模式——让创意真正挣脱束缚，像应用一样自由驰骋。
                     </p>
                     <p>
                         但力量越大，责任越大。当 Scratch 项目获得应用级权限时，它拥有了改变您设备的能力。
@@ -28,13 +28,13 @@ const CYSOCoreModal = props => (
                         background: 'linear-gradient(135deg, rgba(79, 142, 194, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%)',
                         padding: '0.75rem 1rem',
                         borderRadius: '8px',
-                        border: '1px solid rgba(79, 142, 194, 0.2)',
+                        border: '1px solid var(--link-color)',
                         fontSize: '0.9rem'
                     }}>
-                        <span style={{color: '#7ec8e3'}}>▪️</span> 自由的前提是安全<br />
-                        <span style={{color: '#f87171'}}>▪️</span> 创造的前提是责任
+                        <span style={{color: 'var(--link-color)'}}>▪️</span> 自由的前提是安全<br />
+                        <span style={{color: 'var(--red-primary, #ff6666)'}}>▪️</span> 创造的前提是责任
                     </p>
-                    <p style={{marginTop: '1rem', fontSize: '13px', color: '#9ca3af'}}>
+                    <p style={{marginTop: '1rem', fontSize: '13px', color: 'var(--ui-modal-foreground, var(--text-primary))', opacity: 0.8}}>
                         我已阅读并理解以上提醒，将继续开启 CYSO Core 模式。
                     </p>
                 </div>

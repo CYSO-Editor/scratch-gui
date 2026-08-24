@@ -431,7 +431,7 @@ const CYSOCoreSetting = ({enabled, onRequestEnable, onRequestDisable}) => (
         <div className={styles.dangerZoneWarning}>
             开启此模式将会移除编辑器和扩展的大部分限制。使用此功能时，请从可信来源运行项目。如没有需要，请谨慎开启！！
         </div>
-        <div style={{fontSize: '12px', color: '#666', marginBottom: '0.5rem'}}>
+        <div className={styles.dangerZoneMuted} style={{fontSize: '12px'}}>
             此设置会保存在项目中。
         </div>
         <button

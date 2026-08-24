@@ -5,7 +5,7 @@ import React from 'react';
 import DeleteButton from '../delete-button/delete-button.jsx';
 import styles from './sprite-selector-item.css';
 import {ContextMenuTrigger} from 'react-contextmenu';
-import {DangerousMenuItem, ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
+import {BorderedMenuItem, DangerousMenuItem, ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
 import {FormattedMessage} from 'react-intl';
 
 // react-contextmenu requires unique id to match trigger and context menu
@@ -54,8 +54,17 @@ const SpriteSelectorItem = props => (
                 onClick={props.onDeleteButtonClick}
             />
         ) : null }
-        {props.onDuplicateButtonClick || props.onDeleteButtonClick || props.onExportButtonClick ? (
+        {props.onCreateWorkspace || props.onDuplicateButtonClick || props.onDeleteButtonClick || props.onExportButtonClick ? (
             <ContextMenu id={`${props.name}-${contextMenuId++}`}>
+                {props.onCreateWorkspace ? (
+                    <BorderedMenuItem onClick={props.onCreateWorkspace}>
+                        <FormattedMessage
+                            defaultMessage="Create Workspace"
+                            description="Menu item to create a separate workspace window for this sprite"
+                            id="tw.spriteSelectorItem.createWorkspace"
+                        />
+                    </BorderedMenuItem>
+                ) : null}
                 {props.onDuplicateButtonClick ? (
                     <MenuItem onClick={props.onDuplicateButtonClick}>
                         <FormattedMessage
@@ -106,6 +115,7 @@ SpriteSelectorItem.propTypes = {
     name: PropTypes.any,
     number: PropTypes.number,
     onClick: PropTypes.func,
+    onCreateWorkspace: PropTypes.func,
     onDeleteButtonClick: PropTypes.func,
     onDuplicateButtonClick: PropTypes.func,
     onExportButtonClick: PropTypes.func,

@@ -788,15 +788,14 @@ class Blocks extends React.Component {
                         onOk={this.handlePromptCallback}
                     />
                 ) : null}
-                {extensionLibraryVisible ? (
-                    <ExtensionLibrary
-                        vm={vm}
-                        onCategorySelected={this.handleCategorySelected}
-                        onEnableProcedureReturns={this.handleEnableProcedureReturns}
-                        onRequestClose={onRequestCloseExtensionLibrary}
-                        onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
-                    />
-                ) : null}
+                <ExtensionLibrary
+                    visible={extensionLibraryVisible}
+                    vm={vm}
+                    onCategorySelected={this.handleCategorySelected}
+                    onEnableProcedureReturns={this.handleEnableProcedureReturns}
+                    onRequestClose={onRequestCloseExtensionLibrary}
+                    onOpenCustomExtensionModal={onOpenCustomExtensionModal || reduxOnOpenCustomExtensionModal}
+                />
                 {customProceduresVisible ? (
                     <CustomProcedures
                         options={{

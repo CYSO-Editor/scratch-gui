@@ -109,6 +109,255 @@ html.tw-misty-sand-theme.tw-custom-bg-perf [class*="gui_gui_"],
 html.tw-misty-sand-theme.tw-custom-bg-perf [class*="gui_body-wrapper_"] {
   background: transparent !important;
 }
+html.tw-misty-sand-theme [class*="menu-bar_menu-bar-item_"] {
+  font-weight: 600;
+}
+html.tw-misty-sand-theme:not(.tw-misty-sand-dark) [class*="extension-button-icon"] {
+  filter: grayscale(100%) brightness(0.4) !important;
+}
+html.tw-misty-sand-theme [class*="stage-header_stage-button_"] {
+  color: #2b3340 !important;
+}
+html.tw-misty-sand-theme [class*="stage-header_stage-button-icon_"] {
+  filter: grayscale(100%) contrast(1.5) brightness(0.95) !important;
+}
+`;
+
+const MISTY_SAND_DARK_CSS = `html.tw-misty-sand-theme.tw-misty-sand-dark {
+  background: linear-gradient(135deg, #1a1c24 0%, #212127 48%, #1c1e24 100%) fixed;
+  --color-scheme: dark !important;
+  --ui-primary: #23242b !important;
+  --ui-secondary: #2a2c34 !important;
+  --ui-tertiary: #34363f !important;
+  --ui-modal-overlay: rgba(10, 10, 15, 0.65) !important;
+  --ui-modal-background: rgba(38, 39, 48, 0.92) !important;
+  --ui-modal-foreground: #e8e9ee !important;
+  --ui-modal-header-foreground: #e8e9ee !important;
+  --ui-white: rgba(255, 255, 255, 0.08) !important;
+  --ui-white-dim: rgba(255, 255, 255, 0.06) !important;
+  --ui-white-transparent: rgba(255, 255, 255, 0.03) !important;
+  --ui-transparent: transparent !important;
+  --ui-black-transparent: rgba(0, 0, 0, 0.35) !important;
+  --text-primary: #e8e9ee !important;
+  --text-primary-transparent: rgba(232, 233, 238, 0.88) !important;
+  --menu-bar-background: rgba(28, 29, 36, 0.6) !important;
+  --menu-bar-foreground: #e8e9ee !important;
+  --assets-background: rgba(30, 32, 40, 0.55) !important;
+  --input-background: rgba(42, 44, 54, 0.7) !important;
+  --popover-background: rgba(36, 37, 46, 0.92) !important;
+  --shadow: rgba(0, 0, 0, 0.45) !important;
+  --badge-background: #2b3348 !important;
+  --badge-border: #3d4a66 !important;
+  --fullscreen-background: rgba(20, 21, 28, 0.9) !important;
+  --fullscreen-accent: #2a2d3a !important;
+  --page-background: #1c1d24 !important;
+  --page-foreground: #e8e9ee !important;
+  --project-title-inactive: rgba(255, 255, 255, 0.3) !important;
+  --project-title-hover: rgba(255, 255, 255, 0.7) !important;
+  --link-color: #7db3f5 !important;
+  --filter-icon-black: invert(100%) !important;
+  --filter-icon-gray: grayscale(100%) brightness(1.7) !important;
+  --filter-icon-white: none !important;
+  --paint-ui-pane-border: rgba(255, 255, 255, 0.12) !important;
+  --paint-text-primary: #e8e9ee !important;
+  --paint-form-border: rgba(255, 255, 255, 0.12) !important;
+  --paint-filter-icon-gray: brightness(1.7) !important;
+  --drop-highlight: #5b9ef0 !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark body {
+  background: transparent !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="gui_gui_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="gui_body-wrapper_"] {
+  background: transparent !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyToolboxDiv,
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="sprite-selector_sprite-selector_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="selector_wrapper_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="gui_tab_"] {
+  background: rgba(30, 32, 42, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  color: #e8e9ee;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyTreeRow {
+  background: rgba(30, 32, 42, 0.5) !important;
+  border-radius: var(--cyso-radius-md);
+  color: #cccccc;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .scratchCategoryMenu,
+html.tw-misty-sand-theme.tw-misty-sand-dark .scratchCategoryMenuRow {
+  background: transparent !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .scratchCategoryMenuItem {
+  background: rgba(30, 32, 42, 0.5) !important;
+  border-radius: var(--cyso-radius-md);
+  color: #cccccc;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .scratchCategoryMenuItem:hover,
+html.tw-misty-sand-theme.tw-misty-sand-dark .scratchCategoryMenuItem.selected {
+  background: rgba(46, 49, 62, 0.65) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklySvg {
+  background: rgba(22, 24, 32, 0.5) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyMainBackground { fill: transparent !important; }
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="menu-bar_menu-bar_"] {
+  background: rgba(28, 29, 36, 0.6) !important;
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="green-flag_green-flag_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="stop-all_stop-all_"] {
+  background: rgba(30, 32, 42, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="extension-button-container"] {
+  background: rgba(30, 32, 42, 0.55) !important;
+  backdrop-filter: blur(9px) saturate(150%);
+  -webkit-backdrop-filter: blur(9px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="menu_menu_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="menu_submenu_"] [class*="menu_menu_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="modal_modal-content_"] {
+  background: rgba(38, 39, 48, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: #e8e9ee;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="menu_submenu_"] { background: transparent !important; }
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="settings-modal_body_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="library_library-scroll-grid_"] {
+  background: transparent !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="stage-header_stage-button_"] {
+  background: rgba(42, 44, 55, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="stage-header_stage-button_"]:hover {
+  background: rgba(54, 57, 70, 0.9) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="stage-header_stage-button-icon_"] {
+  filter: grayscale(100%) brightness(1.7) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .pause-btn {
+  background-color: rgba(42, 44, 55, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .pause-btn:hover {
+  background-color: rgba(54, 57, 70, 0.9) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menu {
+  background: #23242b !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menuitem,
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menuitem-content {
+  color: #e8e9ee !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menuitem-highlight,
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menuitem-hover {
+  background-color: #34363f !important;
+  border-color: #34363f !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyWidgetDiv .goog-menuitem-disabled .goog-menuitem-content {
+  color: #666a7a !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyDropDownDiv {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyDropDownDiv .goog-menuitem {
+  color: #e8e9ee !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyDropDownDiv .goog-menuitem-highlight,
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyDropDownDiv .goog-menuitem-hover {
+  background-color: #34363f !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyCheckbox {
+  fill: #ffffff !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyScrollbarHandle {
+  fill: #555a6a !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyScrollbarHandle:hover {
+  fill: #6a7080 !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .blocklyZoom > image {
+  filter: invert(100%) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .Popover {
+  color-scheme: dark !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .Popover-body {
+  color: #e8e9ee !important;
+  background: rgba(36, 37, 46, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.45) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark .Popover-tipShape {
+  fill: rgba(36, 37, 46, 0.92) !important;
+  stroke: rgba(255, 255, 255, 0.12) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf .blocklyToolboxDiv,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="sprite-selector_sprite-selector_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="selector_wrapper_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="gui_tab_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf .blocklyTreeRow,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf .scratchCategoryMenuItem,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf .blocklySvg,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="green-flag_green-flag_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="stop-all_stop-all_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="extension-button-container"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="settings-modal_body_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="library_library-scroll-grid_"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(30, 32, 42, 0.6) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="menu_menu_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="modal_modal-content_"] {
+  backdrop-filter: blur(16px) saturate(155%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(155%) !important;
+  background: rgba(38, 39, 48, 0.92) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="gui_gui_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="gui_body-wrapper_"] {
+  background: transparent !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_backpack-container_"] {
+  background: rgba(30, 32, 42, 0.45) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_backpack-header_"] {
+  background: rgba(38, 39, 48, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e8e9ee !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_backpack-header_"]:hover {
+  background: rgba(46, 49, 62, 0.9) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_backpack-list_"] {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_status-message_"] {
+  color: #cccccc !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_error-message_"] {
+  color: #ff8a8a !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_more_"] {
+  background: rgba(59, 73, 108, 0.95) !important;
+  color: #ffffff !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="backpack_drag-over_"]:after {
+  background-color: #5b9ef0 !important;
+}
 `;
 
 let activeGui = null;
@@ -271,7 +520,7 @@ const ensureFullscreenBgObserver = () => {
     updateFullscreenBgVisibility();
 };
 
-const applyCustomTheme = (theme) => {
+const applyCustomTheme = (theme, forceDarkMode) => {
     if (typeof document === 'undefined') {
         return;
     }
@@ -281,12 +530,8 @@ const applyCustomTheme = (theme) => {
     }
 
     const custom = getCurrent();
+    const darkMode = typeof forceDarkMode === 'boolean' ? forceDarkMode : !!custom.darkMode;
 
-    // Apply custom accent color on every GUI theme, not only misty-sand.
-    // Uses !important so it overrides the inline --looks-secondary that applyGuiColors
-    // sets on documentElement.
-    // Guarded so we skip the (potentially expensive) icon recolor and stylesheet write
-    // whenever the custom accent value is unchanged.
     {
         const accentCustom = custom.accentCustom || '';
         const accentChanged = accentCustom !== lastCustomAccent;
@@ -329,6 +574,7 @@ const applyCustomTheme = (theme) => {
         if (typeof document !== 'undefined') {
             document.documentElement.classList.remove('tw-custom-html-bg');
             document.documentElement.classList.remove('tw-custom-bg-perf');
+            document.documentElement.classList.remove('tw-misty-sand-dark');
         }
         const cssStyle = document.getElementById('tw-custom-css');
         if (cssStyle) {
@@ -337,6 +583,10 @@ const applyCustomTheme = (theme) => {
         const baseStyle = document.getElementById('tw-misty-sand-base');
         if (baseStyle) {
             baseStyle.textContent = '';
+        }
+        const darkStyle = document.getElementById('tw-misty-sand-dark');
+        if (darkStyle) {
+            darkStyle.textContent = '';
         }
         const bgLayer = document.getElementById('tw-editor-bg-layer');
         if (bgLayer) {
@@ -385,6 +635,31 @@ const applyCustomTheme = (theme) => {
     }
     if (baseStyle.textContent !== MISTY_SAND_DEFAULT_CSS) {
         baseStyle.textContent = MISTY_SAND_DEFAULT_CSS;
+    }
+
+    document.documentElement.classList.toggle('tw-misty-sand-dark', darkMode);
+    let darkStyle = document.getElementById('tw-misty-sand-dark');
+    if (darkMode) {
+        if (!darkStyle) {
+            darkStyle = document.createElement('style');
+            darkStyle.id = 'tw-misty-sand-dark';
+            document.head.appendChild(darkStyle);
+        }
+        if (darkStyle.textContent !== MISTY_SAND_DARK_CSS) {
+            darkStyle.textContent = MISTY_SAND_DARK_CSS;
+        }
+    } else if (darkStyle) {
+        if (darkStyle.textContent !== '') {
+            darkStyle.textContent = '';
+        }
+    }
+
+    if (typeof window !== 'undefined' && window.EditorPreload && window.EditorPreload.setNativeTheme) {
+        try {
+            window.EditorPreload.setNativeTheme(darkMode);
+        } catch (e) {
+            // ignore: native theme call must not block Blockly chrome theming
+        }
     }
 
     let cssStyle = document.getElementById('tw-custom-css');

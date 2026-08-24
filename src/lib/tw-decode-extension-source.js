@@ -131,9 +131,6 @@ const matchTranslationFromSetup = (source, key) => {
         return null;
     }
 
-    // Only scan a bounded region after the setup marker. The translation table
-    // is normally small and near the top of the file; scanning the entire
-    // (possibly huge) source for every extension is what made loading slow.
     const SCAN_LIMIT = 65536;
     const start = setupMatch.index + setupMatch[0].length - 1;
     const scanEnd = Math.min(source.length, start + SCAN_LIMIT);
@@ -200,46 +197,42 @@ const matchTranslationFromSetup = (source, key) => {
 
 
 
+const PERMISSION_VALUES = new Set(Object.values(PERMISSION_TYPES));
+const PERMISSION_KEY_TO_VALUE = Object.fromEntries(
+    Object.entries(PERMISSION_TYPES).map(([key, value]) => [key, value])
+);
+
 export const extractExtensionPermissions = source => {
     if (typeof source !== 'string') {
         return [];
     }
-    const validValues = new Set(Object.values(PERMISSION_TYPES));
-    const valueByKey = {};
-    Object.entries(PERMISSION_TYPES).forEach(([key, value]) => {
-        valueByKey[key] = value;
-    });
 
     const results = new Set();
 
     const collectFromArray = body => {
-        
         const strRegex = /['"]([^'"]+)['"]/g;
         let s;
         while ((s = strRegex.exec(body))) {
-            if (validValues.has(s[1])) {
+            if (PERMISSION_VALUES.has(s[1])) {
                 results.add(s[1]);
             }
         }
-        
         const tokenRegex = /PERMISSION_TYPES\.([A-Z_][A-Z0-9_]*)/g;
         let t;
         while ((t = tokenRegex.exec(body))) {
-            const value = valueByKey[t[1]];
+            const value = PERMISSION_KEY_TO_VALUE[t[1]];
             if (value) {
                 results.add(value);
             }
         }
     };
 
-    
     const arrayRegex = /permissions\s*:\s*\[([^\]]*)\]/g;
     let m;
     while ((m = arrayRegex.exec(source))) {
         collectFromArray(m[1]);
     }
 
-    
     const altRegex = /(?:this\.permissions|registerExtensionPermissions\s*\([^,]*,\s*)\[([^\]]*)\]/g;
     while ((m = altRegex.exec(source))) {
         collectFromArray(m[1]);

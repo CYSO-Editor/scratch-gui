@@ -36,7 +36,7 @@ import TWFancyCheckbox from '../../components/tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings.css';
 import {detectTheme} from '../../lib/themes/themePersistance.js';
 import {applyGuiColors, applyCustomTheme} from '../../lib/themes/guiHelpers.js';
-import {GUI_MISTY_SAND} from '../../lib/themes/index.js';
+import {GUI_LIGHT, GUI_DARK, GUI_MISTY_SAND} from '../../lib/themes/index.js';
 import {APP_NAME} from '../../lib/brand.js';
 import '../../lib/normalize.css';
 
@@ -97,10 +97,68 @@ if (isMistySand) {
 }
 document.documentElement.classList.toggle('tw-misty-sand-theme', isMistySand);
 document.body.classList.toggle('tw-misty-sand-theme', isMistySand);
+
+// Allow the opener to pass the GUI theme directly in the URL (cross-origin windows may not share localStorage).
+try {
+    const params = new URLSearchParams(window.location.search);
+    const guiParam = params.get('gui');
+    if (guiParam === GUI_MISTY_SAND) {
+        theme.gui = GUI_MISTY_SAND;
+        isMistySand = true;
+    } else if (guiParam === GUI_DARK) {
+        theme.gui = GUI_DARK;
+        isMistySand = false;
+    } else if (guiParam === GUI_LIGHT) {
+        theme.gui = GUI_LIGHT;
+        isMistySand = false;
+    }
+    document.documentElement.classList.toggle('tw-misty-sand-theme', isMistySand);
+    document.body.classList.toggle('tw-misty-sand-theme', isMistySand);
+} catch (e) {  }
+
+const detectDarkMode = () => {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('dark') === '1') {
+            return true;
+        }
+    } catch (e) {  }
+    const rootDocument = getRootDocument();
+    if (rootDocument) {
+        if (rootDocument.documentElement.classList.contains('tw-misty-sand-dark') ||
+            rootDocument.documentElement.classList.contains('tw-dark-theme')) {
+            return true;
+        }
+    }
+    try {
+        const persisted = localStorage.getItem('tw:customTheme');
+        if (persisted) {
+            const parsed = JSON.parse(persisted);
+            if (parsed.darkMode) {
+                return true;
+            }
+        }
+    } catch (e) {  }
+    try {
+        const persisted = localStorage.getItem('tw:theme');
+        if (persisted === 'dark') {
+            return true;
+        }
+    } catch (e) {  }
+    try {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return true;
+        }
+    } catch (e) {  }
+    return false;
+};
+const isDarkMode = detectDarkMode();
+
 applyGuiColors(theme);
-applyCustomTheme(theme);
+applyCustomTheme(theme, isDarkMode);
 if (window.console) {
     console.log('[CYSO-misty] misty-sand:', isMistySand,
+        '| dark:', isDarkMode,
         '| theme.gui:', theme.gui,
         '| html class:', document.documentElement.className,
         '| page-bg:', getComputedStyle(document.documentElement).getPropertyValue('--page-background'));
@@ -111,14 +169,27 @@ if (typeof window !== 'undefined' && window.opener && typeof window.opener.addEv
     try {
         window.opener.addEventListener('theme-changed', () => {
             const next = detectTheme();
-            const stillMisty = detectMistySand();
-            if (stillMisty) {
-                next.gui = GUI_MISTY_SAND;
-            }
+            let stillMisty = detectMistySand();
+            const stillDark = detectDarkMode();
+            // Re-apply URL theme override if present.
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const guiParam = params.get('gui');
+                if (guiParam === GUI_MISTY_SAND) {
+                    next.gui = GUI_MISTY_SAND;
+                    stillMisty = true;
+                } else if (guiParam === GUI_DARK) {
+                    next.gui = GUI_DARK;
+                    stillMisty = false;
+                } else if (guiParam === GUI_LIGHT) {
+                    next.gui = GUI_LIGHT;
+                    stillMisty = false;
+                }
+            } catch (e) {  }
             document.documentElement.classList.toggle('tw-misty-sand-theme', stillMisty);
             document.body.classList.toggle('tw-misty-sand-theme', stillMisty);
             applyGuiColors(next);
-            applyCustomTheme(next);
+            applyCustomTheme(next, stillDark);
         });
     } catch (e) {  }
 }

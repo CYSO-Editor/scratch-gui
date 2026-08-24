@@ -47,7 +47,7 @@ const SecurityManagerModalComponent = props => {
 
     return (
         <Modal
-            className={styles.modalContent}
+            className={props.isDarkMode ? `${styles.modalContent} ${styles.dark}` : styles.modalContent}
             onRequestClose={props.enableButtons ? props.onDenied : noop}
             contentLabel={props.intl.formatMessage(messages.title)}
             id="securitymanagermodal"

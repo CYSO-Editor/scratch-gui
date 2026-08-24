@@ -12,7 +12,6 @@ import extensionLibraryContent, {
     galleryLoading,
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
-import extensionTags from '../lib/libraries/tw-extension-tags';
 import {
     mapToLibraryFormat,
     checkForUpdates,
@@ -21,12 +20,20 @@ import {
     getCachedExtensionFile,
     cacheExtensionFile,
     getAllCachedCovers,
-    syncCache
+    syncCache,
+    checkCachedFileForUpdate,
+    downloadAndCacheExtension,
+    getProxiedUrl,
+    CYSCREXTHUB_CONFIG,
+    getCustomLibraries,
+    fetchAndParseLibrary
 } from '../lib/libraries/cysoeditor-hub';
 
 import LibraryComponent from '../components/library/library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
 import cysoeditorHubIcon from '../components/action-menu/icon--cysoeditor-hub.svg';
+import CustomLibraryModal from './custom-library-modal.jsx';
+import CysoDialog from '../components/cyso-dialog/cyso-dialog.jsx';
 
 const messages = defineMessages({
     extensionTitle: {
@@ -38,11 +45,6 @@ const messages = defineMessages({
         defaultMessage: 'CYSCREXTHUB Extension Gallery',
         description: 'Name of CYSCREXTHUB extension gallery in extension library',
         id: 'tw.cysoeditorHub.name'
-    },
-    cysoeditorHubError: {
-        defaultMessage: 'CYSCREXTHUB Extension Gallery (Offline)',
-        description: 'Name of CYSCREXTHUB extension gallery when offline',
-        id: 'tw.cysoeditorHub.error'
     },
     cacheStatusCached: {
         defaultMessage: 'Cached',
@@ -83,6 +85,66 @@ const messages = defineMessages({
         defaultMessage: '{count} loaded',
         description: 'Currently loaded extensions count',
         id: 'tw.cysoeditorHub.loadedCount'
+    },
+    hubWelcomeTitle: {
+        defaultMessage: '欢迎使用 CYSCREXTHUB 扩展库！这里汇集了丰富的扩展资源。',
+        description: 'Welcome title for CYSCREXTHUB extension library',
+        id: 'tw.cysoeditorHub.welcomeTitle'
+    },
+    hubWelcomeCached: {
+        defaultMessage: '本地已缓存：{count} 个扩展',
+        description: 'Cached extension count in welcome card',
+        id: 'tw.cysoeditorHub.welcomeCached'
+    },
+    hubWelcomeLoaded: {
+        defaultMessage: '当前已加载：{count} 个扩展',
+        description: 'Loaded extension count in welcome card',
+        id: 'tw.cysoeditorHub.welcomeLoaded'
+    },
+    hubWelcomeUpdated: {
+        defaultMessage: '更新时间：{date}',
+        description: 'Last updated time in welcome card',
+        id: 'tw.cysoeditorHub.welcomeUpdated'
+    },
+    hubWelcomeNotUpdated: {
+        defaultMessage: '未更新',
+        description: 'Not updated placeholder in welcome card',
+        id: 'tw.cysoeditorHub.welcomeNotUpdated'
+    },
+    hubWelcomeNetwork: {
+        defaultMessage: '网络状态：{status}',
+        description: 'Network status in welcome card',
+        id: 'tw.cysoeditorHub.welcomeNetwork'
+    },
+    hubWelcomeOnline: {
+        defaultMessage: '在线',
+        description: 'Online status in welcome card',
+        id: 'tw.cysoeditorHub.welcomeOnline'
+    },
+    hubWelcomeOffline: {
+        defaultMessage: '离线',
+        description: 'Offline status in welcome card',
+        id: 'tw.cysoeditorHub.welcomeOffline'
+    },
+    customLibraryManage: {
+        defaultMessage: '添加 / 管理自定义扩展库',
+        description: 'Button to add or manage custom extension libraries',
+        id: 'tw.extensionLibrary.customLibraryManage'
+    },
+    customLibraryCount: {
+        defaultMessage: '{count} 个自定义库源',
+        description: 'Count of custom extension library sources',
+        id: 'tw.extensionLibrary.customLibraryCount'
+    },
+    customLibraryLoading: {
+        defaultMessage: '加载中…',
+        description: 'Custom library is loading',
+        id: 'tw.extensionLibrary.customLibraryLoading'
+    },
+    customLibraryLoadError: {
+        defaultMessage: '加载失败：{error}',
+        description: 'Custom library failed to load',
+        id: 'tw.extensionLibrary.customLibraryLoadError'
     }
 });
 
@@ -128,8 +190,10 @@ const saveCachedGallery = gallery => {
 
 let cachedGallery = loadCachedGallery();
 
-const fetchLibrary = async () => {
-    const res = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
+const GALLERY_FETCH_TIMEOUT = 15000;
+
+const fetchLibrary = async signal => {
+    const res = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json', {signal});
     if (!res.ok) {
         throw new Error(`HTTP status ${res.status}`);
     }
@@ -142,7 +206,7 @@ const fetchLibrary = async () => {
         extensionId: extension.id,
         extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
         iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-        tags: ['tw'],
+        tags: ['tw', 'turbowarp'],
         
         
         credits: [
@@ -165,7 +229,7 @@ const fetchLibrary = async () => {
 const cysoeditorHubLoading = {
     name: (
         <FormattedMessage
-            defaultMessage="CYSCREXTHUB Extension Gallery"
+            defaultMessage="CYSCREXTHUB 扩展库（加载中）"
             description="Name of CYSCREXTHUB extension gallery in extension library"
             id="tw.cysoeditorHub.loading"
         />
@@ -179,23 +243,9 @@ const cysoeditorHubLoading = {
 const cysoeditorHubError = {
     name: (
         <FormattedMessage
-            defaultMessage="CYSCREXTHUB Extension Gallery (Offline)"
+            defaultMessage="CYSCREXTHUB 扩展库（离线）"
             description="Name of CYSCREXTHUB extension gallery when offline"
             id="tw.cysoeditorHub.error"
-        />
-    ),
-    iconURL: extensionIcon,
-    tags: ['cysoeditor-hub'],
-    disabled: true,
-    inset: true
-};
-
-const cysoeditorHubMore = {
-    name: (
-        <FormattedMessage
-            defaultMessage="CYSCREXTHUB Extension Gallery"
-            description="Name of CYSCREXTHUB extension gallery in extension library"
-            id="tw.cysoeditorHub.more"
         />
     ),
     iconURL: extensionIcon,
@@ -208,12 +258,25 @@ class ExtensionLibrary extends React.PureComponent {
     constructor (props) {
         super(props);
         bindAll(this, [
-            'handleItemSelect'
+            'handleItemSelect',
+            'loadCustomLibraries',
+            'openCustomLibraryModal',
+            'closeCustomLibraryModal',
+            'handleCustomLibraryChanged',
+            'showAlert',
+            'closeAlert',
+            'confirmAddExtension',
+            'cancelAddExtension',
+            'cancelImport',
+            'setConfirmSandbox',
+            'sourceItem'
         ]);
         
         const cachedHubData = getCachedExtensions();
 
         this.coverBlobUrls = {};
+        this._loadedCysoExtensions = new Map();
+        this._pendingCysoLoads = new Set();
 
         this.state = {
             gallery: cachedGallery,
@@ -226,11 +289,32 @@ class ExtensionLibrary extends React.PureComponent {
             cysoeditorHubCachedCount: cachedHubData.extensions.length,
             isOnline: navigator.onLine,
             loadedExtensionsCount: 0,
-            coversReady: false
+            coversReady: false,
+            customLibrarySections: [],
+            showCustomLibraryModal: false,
+            confirmDialog: null,
+            alertMessage: null,
+            importing: null
         };
     }
     
     componentDidMount () {
+        window.addEventListener('online', this.handleOnlineStatusChange);
+        window.addEventListener('offline', this.handleOnlineStatusChange);
+        window.addEventListener('storage', this.handleStorageChange);
+
+        this._mounted = true;
+        this.ensureInit();
+    }
+
+    componentDidUpdate () {
+        if (!this._initDone) this.ensureInit();
+    }
+
+    ensureInit () {
+        if (this._initDone || !this._mounted || !this.props.visible) return;
+        this._initDone = true;
+
         const hasGallery = !!this.state.gallery;
         if (!hasGallery) {
             this._galleryTimeout = setTimeout(() => {
@@ -240,8 +324,12 @@ class ExtensionLibrary extends React.PureComponent {
             }, 750);
         }
 
-        fetchLibrary()
+        const controller = new AbortController();
+        this._galleryFetchController = controller;
+        this._galleryFetchTimeout = setTimeout(() => controller.abort(), GALLERY_FETCH_TIMEOUT);
+        fetchLibrary(controller.signal)
             .then(gallery => {
+                if (this._galleryFetchTimeout) clearTimeout(this._galleryFetchTimeout);
                 cachedGallery = gallery;
                 saveCachedGallery(gallery);
                 this.setState({
@@ -251,6 +339,7 @@ class ExtensionLibrary extends React.PureComponent {
                 if (this._galleryTimeout) clearTimeout(this._galleryTimeout);
             })
             .catch(error => {
+                if (this._galleryFetchTimeout) clearTimeout(this._galleryFetchTimeout);
                 log.error(error);
                 if (!this.state.gallery) {
                     this.setState({
@@ -270,38 +359,38 @@ class ExtensionLibrary extends React.PureComponent {
 
         this.refreshCoverBlobUrls();
 
-        window.addEventListener('online', this.handleOnlineStatusChange);
-        window.addEventListener('offline', this.handleOnlineStatusChange);
-        window.addEventListener('storage', this.handleStorageChange);
-
-        this._mounted = true;
+        this.loadCustomLibraries();
     }
 
     refreshCoverBlobUrls = async () => {
         try {
             const entries = await getAllCachedCovers();
             const map = {};
-            await Promise.all(entries.map(e => new Promise(resolve => {
-                try {
-                    if (e && e.blob) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            map[e.id] = reader.result;
+            const concurrency = 4;
+            for (let i = 0; i < entries.length; i += concurrency) {
+                const chunk = entries.slice(i, i + concurrency);
+                await Promise.all(chunk.map(e => new Promise(resolve => {
+                    try {
+                        if (e && e.blob) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                map[e.id] = reader.result;
+                                resolve();
+                            };
+                            reader.onerror = () => resolve();
+                            reader.readAsDataURL(e.blob);
+                        } else {
                             resolve();
-                        };
-                        reader.onerror = () => resolve();
-                        reader.readAsDataURL(e.blob);
-                    } else {
+                        }
+                    } catch (err) {
+                        log.error('Failed to convert cover to data URL:', err);
                         resolve();
                     }
-                } catch (err) {
-                    log.error('Failed to convert cover to data URL:', err);
-                    resolve();
+                })));
+                if (this._mounted) {
+                    this.coverBlobUrls = {...this.coverBlobUrls, ...map};
+                    this.setState(prev => ({coversReady: !prev.coversReady}));
                 }
-            })));
-            this.coverBlobUrls = map;
-            if (this._mounted) {
-                this.setState(prev => ({coversReady: !prev.coversReady}));
             }
         } catch (err) {
             log.error('Failed to refresh cover blob URLs:', err);
@@ -312,6 +401,8 @@ class ExtensionLibrary extends React.PureComponent {
         this._mounted = false;
         this.coverBlobUrls = {};
         if (this._galleryTimeout) clearTimeout(this._galleryTimeout);
+        if (this._galleryFetchTimeout) clearTimeout(this._galleryFetchTimeout);
+        if (this._galleryFetchController) this._galleryFetchController.abort();
         window.removeEventListener('online', this.handleOnlineStatusChange);
         window.removeEventListener('offline', this.handleOnlineStatusChange);
         window.removeEventListener('storage', this.handleStorageChange);
@@ -323,6 +414,17 @@ class ExtensionLibrary extends React.PureComponent {
     };
 
     handleStorageChange = e => {
+        if (e && e.key === CYSCREXTHUB_CONFIG.STORAGE_KEY) {
+            const cached = getCachedExtensions();
+            if (cached.extensions.length > 0) {
+                this.setState({
+                    cysoeditorHubGallery: cached.extensions,
+                    cysoeditorHubLastUpdated: cached.lastUpdated,
+                    cysoeditorHubCachedCount: cached.extensions.length
+                });
+            }
+            this.refreshCoverBlobUrls();
+        }
     };
     
     startBackgroundUpdate = () => {
@@ -378,6 +480,48 @@ class ExtensionLibrary extends React.PureComponent {
                 }
             });
     };
+
+    loadCustomLibraries = async () => {
+        const libs = getCustomLibraries();
+        this.setState({customLibrarySections: []});
+        for (const lib of libs) {
+            const section = {
+                sourceId: lib.id,
+                name: lib.name,
+                items: [],
+                loading: true,
+                error: null
+            };
+            this.setState(prev => ({
+                customLibrarySections: [...prev.customLibrarySections, section]
+            }));
+            try {
+                const items = await fetchAndParseLibrary(lib, cysoeditorHubIcon, this.props.intl.locale);
+                this.setState(prev => ({
+                    customLibrarySections: prev.customLibrarySections.map(s =>
+                        s.sourceId === lib.id ? {...s, items, loading: false} : s)
+                }));
+            } catch (err) {
+                log.error('Custom library load failed:', err);
+                this.setState(prev => ({
+                    customLibrarySections: prev.customLibrarySections.map(s =>
+                        s.sourceId === lib.id ? {...s, error: err.message || '加载失败', loading: false} : s)
+                }));
+            }
+        }
+    };
+
+    openCustomLibraryModal = () => {
+        this.setState({showCustomLibraryModal: true});
+    };
+
+    closeCustomLibraryModal = () => {
+        this.setState({showCustomLibraryModal: false});
+    };
+
+    handleCustomLibraryChanged = () => {
+        this.loadCustomLibraries();
+    };
     
     ensureFromExtensionRegistered () {
         const Blockly = LazyScratchBlocks.get();
@@ -429,6 +573,9 @@ class ExtensionLibrary extends React.PureComponent {
         const isCysoeditorHubExtension = item.tags &&
             item.tags.includes('cysoeditor-hub') &&
             extensionId !== 'cysoeditor-hub-welcome';
+
+        const isCustomLibraryExtension = item.tags &&
+            item.tags.includes('custom-library');
 
         const normalizeUrl = u => {
             if (!u || typeof u !== 'string') return '';
@@ -494,20 +641,23 @@ class ExtensionLibrary extends React.PureComponent {
                         } else {
                             errorMessage = `扩展加载失败：${item.name || extensionId}\n\n请检查网络连接并重试。`;
                         }
-                        // eslint-disable-next-line no-alert
-                        alert(errorMessage);
+                        this.showAlert(errorMessage);
                     });
             }
         };
 
-        if (isCysoeditorHubExtension) {
-            const confirmMessage = `此扩展来自 CYSCREXTHUB，与原版 Scratch 不兼容，是否添加？\n\n扩展名称：${item.name || extensionId}\n\n点击"确定"继续添加，点击"取消"放弃。`;
-            // eslint-disable-next-line no-alert
-            const userConfirmed = window.confirm(confirmMessage);
-            if (!userConfirmed) {
+        if (isCysoeditorHubExtension || isCustomLibraryExtension) {
+            if (this._loadedCysoExtensions && this._loadedCysoExtensions.has(extensionId)) {
+                this.props.onCategorySelected(this._loadedCysoExtensions.get(extensionId) || extensionId);
                 return;
             }
-            this.loadCysoExtension(item);
+            if (this._pendingCysoLoads.has(extensionId)) {
+                return;
+            }
+            const sourceLabel = isCysoeditorHubExtension ? 'CYSCREXTHUB 扩展库' : (item.sourceName || '扩展库');
+            const confirmMessage = `此扩展来自 ${sourceLabel}，是否添加到项目中？\n\n扩展名称：${item.name || extensionId}\n\n点击"确定"继续添加，点击"取消"放弃。`;
+            this._pendingCysoLoads.add(extensionId);
+            this.setState({confirmDialog: {message: confirmMessage, item, sandbox: false}});
         } else {
             const url = item.extensionURL ? item.extensionURL : extensionId;
             if (!item.disabled) {
@@ -516,16 +666,18 @@ class ExtensionLibrary extends React.PureComponent {
         }
     }
 
-    loadCysoExtension (item) {
+    loadCysoExtension (item, signal, sandbox) {
         const extensionId = item.extensionId;
         const urls = (item.extensionURLs && item.extensionURLs.length) ?
             item.extensionURLs : [item.extensionURL];
+
+        this._forceUnsandboxedForDataUrl = sandbox !== true;
 
         const sm = this.props.vm && this.props.vm.securityManager;
         if (sm && !sm.__cysoDataUrlPatched) {
             const originalGetSandboxMode = sm.getSandboxMode.bind(sm);
             sm.getSandboxMode = url => {
-                if (typeof url === 'string' && url.startsWith('data:')) {
+                if (typeof url === 'string' && url.startsWith('data:') && this._forceUnsandboxedForDataUrl) {
                     return Promise.resolve('unsandboxed');
                 }
                 return originalGetSandboxMode(url);
@@ -563,6 +715,9 @@ class ExtensionLibrary extends React.PureComponent {
                     }
                     if (actualId) {
                         this.props.onCategorySelected(actualId);
+                        if (this._loadedCysoExtensions) {
+                            this._loadedCysoExtensions.set(extensionId, actualId);
+                        }
                     } else {
                         this.props.onCategorySelected(extensionId);
                     }
@@ -575,16 +730,21 @@ class ExtensionLibrary extends React.PureComponent {
                 });
         };
 
-        const loadFromNetwork = () => {
+        const loadFromNetwork = () => new Promise(resolve => {
             let lastError;
             const tryLoad = index => {
-                if (index >= urls.length) {
-                    const errorMessage = `扩展加载失败：${item.name || ''}\n\n无法从任何镜像获取扩展文件，请检查网络连接（或代理设置）后重试。\n\n最后错误：${lastError ? lastError.message : '未知错误'}`;
-                    // eslint-disable-next-line no-alert
-                    alert(errorMessage);
+                if (signal && signal.aborted) {
+                    resolve(false);
                     return;
                 }
-                fetch(urls[index])
+                if (index >= urls.length) {
+                    if (!(signal && signal.aborted)) {
+                        this.showAlert(`扩展加载失败：${item.name || ''}\n\n无法从任何镜像获取扩展文件，请检查网络连接（或代理设置）后重试。\n\n最后错误：${lastError ? lastError.message : '未知错误'}`);
+                    }
+                    resolve(false);
+                    return;
+                }
+                fetch(urls[index], signal ? {signal} : undefined)
                     .then(res => {
                         if (!res.ok) {
                             throw new Error(`HTTP ${res.status}`);
@@ -599,36 +759,121 @@ class ExtensionLibrary extends React.PureComponent {
                         const code = new TextDecoder('utf-8').decode(buf);
                         return loadCode(code);
                     })
-                    .then(() => {})
+                    .then(() => resolve(true))
                     .catch(err => {
+                        if (signal && signal.aborted) {
+                            resolve(false);
+                            return;
+                        }
                         lastError = err;
                         tryLoad(index + 1);
                     });
             };
             tryLoad(0);
+        });
+
+        const triggerBackgroundRefresh = () => {
+            if (!navigator.onLine || !item.downloadUrl) {
+                return;
+            }
+            checkCachedFileForUpdate(extensionId, item.downloadUrl)
+                .then(fresh => {
+                    if (fresh.needsUpdate) {
+                        return downloadAndCacheExtension(extensionId, getProxiedUrl(item.downloadUrl));
+                    }
+                })
+                .catch(() => {});
         };
 
-        getCachedExtensionFile(extensionId)
+        return getCachedExtensionFile(extensionId)
             .then(cached => {
                 if (cached && cached.content) {
                     try {
                         const code = new TextDecoder('utf-8').decode(cached.content);
-                        return loadCode(code).catch(err => {
-                            log.error('Cached extension load failed, falling back to network:', err);
-                            loadFromNetwork();
+                        triggerBackgroundRefresh();
+                        return loadCode(code).catch(() => {
+                            log.error('Cached extension load failed, falling back to network');
+                            return loadFromNetwork();
                         });
                     } catch (e) {
                         log.error('Failed to decode cached extension file, falling back to network:', e);
                     }
                 }
-                loadFromNetwork();
+                return loadFromNetwork();
             })
             .catch(err => {
                 log.error('getCachedExtensionFile failed, falling back to network:', err);
-                loadFromNetwork();
+                return loadFromNetwork();
             });
     }
-    
+
+    sourceItem (item, sourceTag) {
+        return {
+            ...item,
+            tags: [sourceTag, ...(item.tags || [])],
+            key: `${sourceTag}-${item.key || item.name || item.rawURL || item.extensionId || ''}`
+        };
+    }
+
+    showAlert (message) {
+        this.setState({alertMessage: message});
+    }
+
+    closeAlert () {
+        this.setState({alertMessage: null});
+    }
+
+    confirmAddExtension () {
+        const dialog = this.state.confirmDialog;
+        if (!dialog) return;
+        const item = dialog.item;
+        const controller = new AbortController();
+        this._importController = controller;
+        this._importingId = item.extensionId;
+        this._pendingCysoLoads.add(item.extensionId);
+        this.setState({confirmDialog: null, importing: item.name || '扩展'});
+        const minDelay = new Promise(resolve => setTimeout(resolve, 450));
+        this.loadCysoExtension(item, controller.signal, dialog.sandbox === true)
+            .catch(err => {
+                if (controller.signal.aborted || (err && err.name === 'AbortError')) {
+                    return;
+                }
+                log.error('[Extension Library] Failed to load extension:', err);
+                this.showAlert(`扩展加载失败：${(err && err.message) || '未知错误'}`);
+            })
+            .then(() => minDelay)
+            .finally(() => {
+                this._pendingCysoLoads.delete(item.extensionId);
+                this._importController = null;
+                this._importingId = null;
+                this.setState({importing: null});
+            });
+    }
+
+    cancelImport () {
+        const controller = this._importController;
+        if (controller) controller.abort();
+        if (this._importingId) {
+            this._pendingCysoLoads.delete(this._importingId);
+        }
+        this._importController = null;
+        this._importingId = null;
+        this.setState({importing: null});
+    }
+
+    setConfirmSandbox (e) {
+        const sandbox = e.target.value === 'sandbox';
+        this.setState(prev => (prev.confirmDialog ? {confirmDialog: {...prev.confirmDialog, sandbox}} : {}));
+    }
+
+    cancelAddExtension () {
+        const dialog = this.state.confirmDialog;
+        if (dialog) {
+            this._pendingCysoLoads.delete(dialog.item.extensionId);
+        }
+        this.setState({confirmDialog: null});
+    }
+
     renderStatusBar () {
         const {
             cysoeditorHubCacheStatus,
@@ -648,18 +893,30 @@ class ExtensionLibrary extends React.PureComponent {
             notCached: intl.formatMessage(messages.cacheStatusNotCached),
             updating: intl.formatMessage(messages.cacheStatusUpdating)
         };
+
+        const themeEl = typeof document !== 'undefined' ? document.documentElement : null;
+        const mistySandLight = !!themeEl &&
+            themeEl.classList.contains('tw-misty-sand-theme') &&
+            !themeEl.classList.contains('tw-misty-sand-dark');
+        const footerBg = mistySandLight ? '#ffffff' : 'var(--ui-secondary, #f2f2f2)';
+        const footerColor = mistySandLight ? '#575e75' : 'var(--text-primary, #575e75)';
         
         return (
             <div
                 style={{
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 10,
+                    flexShrink: 0,
                     padding: '8px 16px',
-                    borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                    borderTop: '1px solid var(--ui-white-dim, rgba(0, 0, 0, 0.1))',
+                    backgroundColor: footerBg,
                     fontSize: '12px',
-                    color: '#666',
+                    color: footerColor,
                     display: 'flex',
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
+                    alignItems: 'center',
                     gap: '8px'
                 }}
             >
@@ -684,23 +941,45 @@ class ExtensionLibrary extends React.PureComponent {
                     {' | '}
                     {cacheStatusText[cysoeditorHubCacheStatus]}
                 </span>
+                <span>
+                    {intl.formatMessage(messages.customLibraryCount, {count: this.state.customLibrarySections.length})}
+                </span>
+                <button
+                    type="button"
+                    onClick={this.openCustomLibraryModal}
+                    style={{
+                        padding: '4px 12px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        border: '1px solid var(--ui-white-dim, rgba(0, 0, 0, 0.2))',
+                        borderRadius: '4px',
+                        backgroundColor: mistySandLight ? '#fff' : 'var(--ui-primary, #fff)',
+                        color: footerColor
+                    }}
+                >
+                    {intl.formatMessage(messages.customLibraryManage)}
+                </button>
             </div>
         );
     }
     
     render () {
+        const SRC_BUILTIN = 'scratch';
+        const SRC_TW = 'TurboWarp';
+        const SRC_HUB = 'CYSCREXTHUB';
         let library = null;
         if (this.state.gallery || this.state.galleryError || this.state.galleryTimedOut) {
-            library = extensionLibraryContent.map(toLibraryItem);
+            library = extensionLibraryContent.map(ext => this.sourceItem(toLibraryItem(ext), SRC_BUILTIN));
             library.push('---');
             if (this.state.gallery) {
-                library.push(toLibraryItem(galleryMore));
+                library.push(this.sourceItem(toLibraryItem(galleryMore), SRC_TW));
                 const locale = this.props.intl.locale;
                 library.push(
                     ...this.state.gallery
                         .filter(i => i.extensionId !== 'faceSensing')
                         .map(i => translateGalleryItem(i, locale))
                         .map(toLibraryItem)
+                        .map(i => this.sourceItem(i, SRC_TW))
                 );
             } else if (this.state.galleryError) {
                 library.push(toLibraryItem(galleryError));
@@ -726,23 +1005,31 @@ class ExtensionLibrary extends React.PureComponent {
                         : ext
                 );
 
+                const {intl} = this.props;
+                const welcomeLoadedCount = (this.props.vm && this.props.vm.extensionManager)
+                    ? Object.keys(this.props.vm.extensionManager.getExtensionURLs()).length
+                    : (this.state.loadedExtensionsCount || 0);
                 const welcomeDescription = (
                     <div style={{ lineHeight: '1.6' }}>
                         <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-                            欢迎使用 CYSCREXTHUB 扩展库！这里汇集了丰富的扩展资源。
+                            {intl.formatMessage(messages.hubWelcomeTitle)}
                         </div>
                         <div style={{ fontSize: '12px', color: '#666' }}>
-                            本地已缓存：{this.state.cysoeditorHubCachedCount || 0} 个扩展
+                            {intl.formatMessage(messages.hubWelcomeCached, {count: this.state.cysoeditorHubCachedCount || 0})}
                             <br />
-                            当前已加载：{this.props.vm && this.props.vm.extensionManager
-                                ? Object.keys(this.props.vm.extensionManager.getExtensionURLs()).length
-                                : (this.state.loadedExtensionsCount || 0)} 个扩展
+                            {intl.formatMessage(messages.hubWelcomeLoaded, {count: welcomeLoadedCount})}
                             <br />
-                            更新时间：{this.state.cysoeditorHubLastUpdated
-                                ? new Date(this.state.cysoeditorHubLastUpdated).toLocaleString()
-                                : '未更新'}
+                            {intl.formatMessage(messages.hubWelcomeUpdated, {
+                                date: this.state.cysoeditorHubLastUpdated
+                                    ? new Date(this.state.cysoeditorHubLastUpdated).toLocaleString()
+                                    : intl.formatMessage(messages.hubWelcomeNotUpdated)
+                            })}
                             <br />
-                            网络状态：{this.state.isOnline ? '在线' : '离线'}
+                            {intl.formatMessage(messages.hubWelcomeNetwork, {
+                                status: this.state.isOnline
+                                    ? intl.formatMessage(messages.hubWelcomeOnline)
+                                    : intl.formatMessage(messages.hubWelcomeOffline)
+                            })}
                         </div>
                     </div>
                 );
@@ -760,31 +1047,115 @@ class ExtensionLibrary extends React.PureComponent {
                     key: 'cysoeditor-hub-welcome'
                 };
                 
-                library.push(toLibraryItem(welcomeExtension));
+                library.push(this.sourceItem(toLibraryItem(welcomeExtension), SRC_HUB));
                 library.push(
-                    ...withCovers.map(toLibraryItem)
+                    ...withCovers.map(i => this.sourceItem(toLibraryItem(i), SRC_HUB))
                 );
             } else if (this.state.cysoeditorHubError) {
                 library.push(toLibraryItem(cysoeditorHubError));
             } else {
                 library.push(toLibraryItem(cysoeditorHubLoading));
             }
+
+            this.state.customLibrarySections.forEach(section => {
+                library.push('---');
+                if (section.error) {
+                    library.push(toLibraryItem({
+                        name: this.props.intl.formatMessage(messages.customLibraryLoadError, {error: section.error}),
+                        iconURL: extensionIcon,
+                        tags: ['custom-library'],
+                        disabled: true,
+                        inset: true
+                    }));
+                } else if (section.loading) {
+                    library.push(toLibraryItem({
+                        name: this.props.intl.formatMessage(messages.customLibraryLoading),
+                        iconURL: extensionIcon,
+                        tags: ['custom-library'],
+                        disabled: true,
+                        inset: true
+                    }));
+                } else if (section.items && section.items.length) {
+                    library.push(...section.items.map(item => this.sourceItem(toLibraryItem(item), `lib-${section.sourceId}`)));
+                }
+            });
         }
+
+        const sourceChips = [{tag: SRC_BUILTIN, intlLabel: SRC_BUILTIN}];
+        if (this.state.gallery) {
+            sourceChips.push({tag: SRC_TW, intlLabel: SRC_TW});
+        }
+        if (this.state.cysoeditorHubGallery && this.state.cysoeditorHubGallery.length > 0) {
+            sourceChips.push({tag: SRC_HUB, intlLabel: SRC_HUB});
+        }
+        this.state.customLibrarySections.forEach(section => {
+            if (!section.error && !section.loading && section.items && section.items.length) {
+                sourceChips.push({tag: `lib-${section.sourceId}`, intlLabel: section.name});
+            }
+        });
 
         return (
             <div>
                 <LibraryComponent
                     data={library}
                     filterable
+                    tags={sourceChips}
                     persistableKey="extensionId"
                     id="extensionLibrary"
-                    tags={extensionTags}
                     title={this.props.intl.formatMessage(messages.extensionTitle)}
                     visible={this.props.visible}
                     onItemSelected={this.handleItemSelect}
                     onRequestClose={this.props.onRequestClose}
+                    footer={this.renderStatusBar()}
                 />
-                {this.props.visible !== false && this.renderStatusBar()}
+                {this.state.showCustomLibraryModal && (
+                    <CustomLibraryModal
+                        visible={this.state.showCustomLibraryModal}
+                        onClose={this.closeCustomLibraryModal}
+                        onChanged={this.handleCustomLibraryChanged}
+                    />
+                )}
+                <CysoDialog
+                    open={!!this.state.confirmDialog}
+                    type="confirm"
+                    title="添加到项目"
+                    message={this.state.confirmDialog ? (
+                        <React.Fragment>
+                            <div>{this.state.confirmDialog.message}</div>
+                            <div style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 14}}>
+                                <span style={{fontSize: 13, flexShrink: 0}}>加载方式：</span>
+                                <select
+                                    value={this.state.confirmDialog.sandbox ? 'sandbox' : 'unsandboxed'}
+                                    onChange={this.setConfirmSandbox}
+                                    style={{padding: '5px 8px', fontSize: 13, borderRadius: 4, border: '1px solid var(--ui-white, #ccc)', background: 'var(--ui-secondary, #fff)', color: 'var(--text-primary, #575e75)'}}
+                                >
+                                    <option value="unsandboxed">非沙盒（默认，支持完整功能）</option>
+                                    <option value="sandbox">沙盒（受限，更安全）</option>
+                                </select>
+                            </div>
+                        </React.Fragment>
+                    ) : null}
+                    confirmText="确定添加"
+                    cancelText="取消"
+                    onConfirm={this.confirmAddExtension}
+                    onCancel={this.cancelAddExtension}
+                />
+                <CysoDialog
+                    open={!!this.state.alertMessage}
+                    type="alert"
+                    title="提示"
+                    message={this.state.alertMessage}
+                    onConfirm={this.closeAlert}
+                    onCancel={this.closeAlert}
+                />
+                <CysoDialog
+                    open={!!this.state.importing}
+                    loading
+                    title="正在导入扩展"
+                    message={this.state.importing ? `正在导入"${this.state.importing}"，请稍候…` : ''}
+                    cancelText="取消导入"
+                    onCancel={this.cancelImport}
+                />
             </div>
         );
     }

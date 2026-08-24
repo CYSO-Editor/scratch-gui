@@ -172,52 +172,25 @@ class LibraryComponent extends React.Component {
         this.setState({filterQuery: ''});
     }
     getFilteredData () {
-        // When no filtering, favorites get their own section
-        if (this.state.selectedTag === 'all' && !this.state.filterQuery) {
-            const favoriteItems = this.props.data
-                .filter(dataItem => (
-                    this.state.initialFavorites.includes(dataItem[this.props.persistableKey])
-                ))
-                .map(dataItem => ({
-                    ...dataItem,
-                    key: `favorite-${dataItem[this.props.persistableKey]}`
-                }));
+        // Favorites are no longer pinned to the top; they appear in their normal position.
 
-            if (favoriteItems.length) {
-                favoriteItems.push('---');
-            }
-
-            return [
-                ...favoriteItems,
-                ...this.props.data
-            ];
-        }
-
-        // When filtering, favorites are just listed first, not in a separate section.
-        const favoriteItems = [];
-        const nonFavoriteItems = [];
+        const filteredItems = [];
         for (const dataItem of this.props.data) {
             if (dataItem === '---') {
-                // ignore
-            } else if (this.state.initialFavorites.includes(dataItem[this.props.persistableKey])) {
-                favoriteItems.push(dataItem);
-            } else {
-                nonFavoriteItems.push(dataItem);
+                continue;
             }
-        }
-
-        let filteredItems = favoriteItems.concat(nonFavoriteItems);
-
-        if (this.state.selectedTag !== 'all') {
-            filteredItems = filteredItems.filter(dataItem => (
-                dataItem.tags &&
-                dataItem.tags.map(i => i.toLowerCase()).includes(this.state.selectedTag)
-            ));
-        }
-
-        if (this.state.filterQuery) {
-            const query = this.state.filterQuery.toLowerCase();
-            filteredItems = filteredItems.filter(dataItem => {
+            if (dataItem.isHeader) {
+                filteredItems.push(dataItem);
+                continue;
+            }
+            if (this.state.selectedTag !== 'all') {
+                if (!(dataItem.tags &&
+                    dataItem.tags.map(i => i.toLowerCase()).includes(this.state.selectedTag))) {
+                    continue;
+                }
+            }
+            if (this.state.filterQuery) {
+                const query = this.state.filterQuery.toLowerCase();
                 const search = [...(dataItem.tags || [])];
                 const addSearchText = value => {
                     if (!value) {
@@ -233,11 +206,11 @@ class LibraryComponent extends React.Component {
                 };
                 addSearchText(dataItem.name);
                 addSearchText(dataItem.description);
-                return search
-                    .join('\n')
-                    .toLowerCase()
-                    .includes(query);
-            });
+                if (!search.join('\n').toLowerCase().includes(query)) {
+                    continue;
+                }
+            }
+            filteredItems.push(dataItem);
         }
 
         return filteredItems;
@@ -249,6 +222,7 @@ class LibraryComponent extends React.Component {
         this.filteredDataRef = ref;
     }
     render () {
+        if (this.props.visible === false) return null;
         const filteredData = this.state.canDisplay && this.props.data && this.getFilteredData();
         return (
             <Modal
@@ -298,11 +272,28 @@ class LibraryComponent extends React.Component {
                     className={classNames(styles.libraryScrollGrid, {
                         [styles.withFilterBar]: this.props.filterable || this.props.tags
                     })}
+                    style={this.props.footer ? {flexGrow: 1, flexShrink: 1, flexBasis: '0%', minHeight: 0, height: 'auto', overflowY: 'auto'} : null}
                     ref={this.setFilteredDataRef}
                 >
                     {filteredData && this.getFilteredData().map((dataItem, index) => (
                         dataItem === '---' ? (
-                            <Separator key={index} />
+                            <Separator key={`${this.state.selectedTag}-sep-${index}`} />
+                        ) : dataItem.isHeader ? (
+                            <div
+                                key={`${this.state.selectedTag}-hdr-${index}`}
+                                style={{
+                                    gridColumn: '1 / -1',
+                                    width: '100%',
+                                    padding: '14px 6px 6px',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    color: '#575e75',
+                                    borderTop: '1px solid rgba(0, 0, 0, 0.12)',
+                                    marginTop: '6px'
+                                }}
+                            >
+                                {dataItem.name}
+                            </div>
                         ) : (
                             <LibraryItem
                                 bluetoothRequired={dataItem.bluetoothRequired}
@@ -323,13 +314,14 @@ class LibraryComponent extends React.Component {
                                 insetIconURL={dataItem.insetIconURL}
                                 internetConnectionRequired={dataItem.internetConnectionRequired}
                                 isPlaying={this.state.playingItem === index}
-                                key={dataItem.key || (
+                                key={`${this.state.selectedTag}-${dataItem.key || (
                                     typeof dataItem.name === 'string' ?
                                         dataItem.name :
                                         dataItem.rawURL
-                                )}
+                                )}-${index}`}
                                 name={dataItem.name}
                                 credits={dataItem.credits}
+                                showDetails={dataItem.showDetails}
                                 samples={dataItem.samples}
                                 docsURI={dataItem.docsURI}
                                 showPlayButton={this.props.showPlayButton}
@@ -356,6 +348,7 @@ class LibraryComponent extends React.Component {
                         </div>
                     )}
                 </div>
+                {this.props.footer}
             </Modal>
         );
     }
@@ -391,7 +384,9 @@ LibraryComponent.propTypes = {
     setStopHandler: PropTypes.func,
     showPlayButton: PropTypes.bool,
     tags: PropTypes.arrayOf(PropTypes.shape(TagButton.propTypes)),
+    footer: PropTypes.node,
     title: PropTypes.string.isRequired,
+    visible: PropTypes.bool,
     removedTrademarks: PropTypes.bool
 };
 

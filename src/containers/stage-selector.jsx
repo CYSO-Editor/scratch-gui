@@ -18,6 +18,7 @@ import {fetchCode} from '../lib/backpack-api';
 import {getEventXY} from '../lib/touch-utils';
 
 import StageSelectorComponent from '../components/stage-selector/stage-selector.jsx';
+import {createWorkspaceWindow} from '../reducers/workspace-windows';
 
 import {getBackdropLibrary} from '../lib/libraries/tw-async-libraries';
 import {handleFileUpload, costumeUpload} from '../lib/file-uploader.js';
@@ -40,6 +41,7 @@ class StageSelector extends React.Component {
         super(props);
         bindAll(this, [
             'handleClick',
+            'handleCreateWorkspace',
             'handleNewBackdrop',
             'handleSurpriseBackdrop',
             'handleEmptyBackdrop',
@@ -53,6 +55,8 @@ class StageSelector extends React.Component {
             'setFileInput',
             'setRef'
         ]);
+        this.clickCount = 0;
+        this.clickTime = 0;
     }
     componentDidMount () {
         document.addEventListener('touchend', this.handleTouchEnd);
@@ -79,7 +83,18 @@ class StageSelector extends React.Component {
         this.handleNewBackdrop(vmBackdrop, shouldActivateTab);
     }
     handleClick () {
+        const now = Date.now();
+        this.clickCount = (now - this.clickTime < 500) ? this.clickCount + 1 : 1;
+        this.clickTime = now;
+        if (this.clickCount >= 3) {
+            this.clickCount = 0;
+            this.handleCreateWorkspace();
+            return;
+        }
         this.props.onSelect(this.props.id);
+    }
+    handleCreateWorkspace () {
+        this.props.onCreateWorkspace(this.props.id);
     }
     handleNewBackdrop (backdrops_, shouldActivateTab = true) {
         const backdrops = Array.isArray(backdrops_) ? backdrops_ : [backdrops_];
@@ -166,7 +181,8 @@ class StageSelector extends React.Component {
     render () {
         const componentProps = omit(this.props, [
             'asset', 'dispatchSetHoveredSprite', 'id', 'intl',
-            'onActivateTab', 'onSelect', 'onShowImporting', 'onCloseImporting',
+            'onActivateTab', 'onCreateWorkspace', 'onSelect',
+            'onShowImporting', 'onCloseImporting',
             'isRtl', 'workspaceMetrics'
         ]);
         return (
@@ -176,6 +192,7 @@ class StageSelector extends React.Component {
                 onBackdropFileUpload={this.handleBackdropUpload}
                 onBackdropFileUploadClick={this.handleFileUploadClick}
                 onClick={this.handleClick}
+                onCreateWorkspace={this.handleCreateWorkspace}
                 onDrop={this.handleDrop}
                 onEmptyBackdropClick={this.handleEmptyBackdrop}
                 onMouseEnter={this.handleMouseEnter}
@@ -210,6 +227,9 @@ const mapStateToProps = (state, {asset, id}) => ({
 });
 
 const mapDispatchToProps = dispatch => ({
+    onCreateWorkspace: targetId => {
+        dispatch(createWorkspaceWindow(targetId));
+    },
     onNewBackdropClick: e => {
         e.stopPropagation();
         dispatch(openBackdropLibrary());

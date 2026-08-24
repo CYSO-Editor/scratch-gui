@@ -46,7 +46,7 @@ class LibraryItemComponent extends React.PureComponent {
             </button>
         );
 
-        return this.props.featured ? (
+        return (this.props.featured || this.props.showDetails) ? (
             <div
                 className={classNames(
                     styles.libraryItem,
@@ -180,16 +180,16 @@ class LibraryItemComponent extends React.PureComponent {
                             {' '}
                             {this.props.credits.map((credit, index) => (
                                 <React.Fragment key={index}>
-                                    {typeof credit === 'object' && credit.id ? (
+                                    {typeof credit === 'object' && (credit.homepage || credit.id) ? (
                                         <a
-                                            href={`https://cyscrexthub.cc.cd/user?id=${credit.id}`}
+                                            href={credit.homepage || `https://cyscrexthub.cc.cd/user?id=${credit.id}`}
                                             target="_blank"
                                             rel="noreferrer"
                                             title={`查看作者主页：${credit.name}`}
                                             onClick={e => {
                                                 e.stopPropagation();
                                                 e.preventDefault();
-                                                window.open(`https://cyscrexthub.cc.cd/user?id=${credit.id}`, '_blank', 'noopener,noreferrer');
+                                                window.open(credit.homepage || `https://cyscrexthub.cc.cd/user?id=${credit.id}`, '_blank', 'noopener,noreferrer');
                                             }}
                                             style={{ cursor: 'pointer' }}
                                         >
@@ -340,6 +340,7 @@ LibraryItemComponent.propTypes = {
     extensionId: PropTypes.string,
     featured: PropTypes.bool,
     hidden: PropTypes.bool,
+    showDetails: PropTypes.bool,
     iconURL: PropTypes.string,
     insetIconURL: PropTypes.string,
     internetConnectionRequired: PropTypes.bool,
@@ -353,7 +354,8 @@ LibraryItemComponent.propTypes = {
         PropTypes.node,
         PropTypes.shape({
             name: PropTypes.string,
-            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+            homepage: PropTypes.string
         })
     ])),
     docsURI: PropTypes.string,

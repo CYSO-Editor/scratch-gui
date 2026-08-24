@@ -14,7 +14,8 @@ const makeDefault = () => ({
         value: ''
     },
     toolbarTransparent: false,
-    accentCustom: ''
+    accentCustom: '',
+    darkMode: false
 });
 
 let current = load();
@@ -44,7 +45,8 @@ function load () {
                 value: typeof toolbarBackground.value === 'string' ? toolbarBackground.value : ''
             },
             toolbarTransparent: typeof parsed.toolbarTransparent === 'boolean' ? parsed.toolbarTransparent : false,
-            accentCustom: typeof parsed.accentCustom === 'string' ? parsed.accentCustom : ''
+            accentCustom: typeof parsed.accentCustom === 'string' ? parsed.accentCustom : '',
+            darkMode: typeof parsed.darkMode === 'boolean' ? parsed.darkMode : false
         };
     } catch (e) {
         return makeDefault();
@@ -60,7 +62,8 @@ const save = custom => {
             custom.editorBackground.value === '' &&
             !custom.performanceMode &&
             custom.toolbarBackground.value === '' &&
-            !custom.toolbarTransparent;
+            !custom.toolbarTransparent &&
+            !custom.darkMode;
         if (empty) {
             localStorage.removeItem(STORAGE_KEY);
         } else {

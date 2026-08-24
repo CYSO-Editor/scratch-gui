@@ -80,6 +80,16 @@ const messages = defineMessages({
         description: 'Label for custom theme section',
         id: 'tw.personalization.custom'
     },
+    darkMode: {
+        defaultMessage: '暗色模式',
+        description: 'Toggle dark mode for misty-sand theme',
+        id: 'tw.personalization.darkMode'
+    },
+    darkModeHint: {
+        defaultMessage: '将雾砂主题切换为暗色样式',
+        description: 'Hint for dark mode toggle',
+        id: 'tw.personalization.darkModeHint'
+    },
     globalCss: {
         defaultMessage: '全局样式',
         description: 'Label for global custom CSS',
@@ -427,6 +437,9 @@ class PersonalizationMenu extends React.Component {
         const next = this.props.theme.set(what, value);
         this.props.onSetTheme(next);
         persistTheme(next);
+        if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('theme-changed'));
+        }
     }
     handleBlockChange (key) {
         if (key === BLOCKS_CUSTOM) {
@@ -465,14 +478,31 @@ class PersonalizationMenu extends React.Component {
             this.props.onClickAddonSettings('editor-theme3');
             return;
         }
+        const isDarkMode = typeof document !== 'undefined' && (
+            document.documentElement.classList.contains('tw-misty-sand-dark') ||
+            document.documentElement.classList.contains('tw-dark-theme')
+        );
+        const isMistySand = typeof document !== 'undefined' &&
+            document.documentElement.classList.contains('tw-misty-sand-theme');
+        const params = new URLSearchParams();
+        if (isDarkMode) {
+            params.set('dark', '1');
+        }
+        params.set('gui', isMistySand ? 'misty-sand' : 'light');
+        const query = params.toString();
+        const hash = '#editor-theme3';
         const root = (typeof process !== 'undefined' && process.env && process.env.ROOT) || '';
         const path = (typeof process !== 'undefined' && process.env && process.env.ROUTING_STYLE === 'wildcard') ? 'addons' : 'addons.html';
-        window.open(`${root}${path}#editor-theme3`);
+        const url = `${root}${path}${query ? `?${query}` : ''}${hash}`;
+        window.open(url);
     }
     updateCustom (next) {
         saveCustomTheme(next);
         applyCustomTheme();
         this.props.onSetCustomTheme(next);
+        if (typeof window !== 'undefined' && typeof CustomEvent !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('theme-changed'));
+        }
     }
     handleCustomText (next) {
         if (this._customTextTimer) {
@@ -790,6 +820,23 @@ class PersonalizationMenu extends React.Component {
 
                         <Section title={intl.formatMessage(messages.customTitle)}>
                         <div className={styles.field}>
+                            <label className={styles.toggleRow}>
+                                <input
+                                    type="checkbox"
+                                    checked={customTheme.darkMode}
+                                    onChange={e => this.updateCustom({
+                                        ...customTheme,
+                                        darkMode: e.target.checked
+                                    })}
+                                />
+                                <span>{intl.formatMessage(messages.darkMode)}</span>
+                            </label>
+                            <div className={styles.fieldHint}>
+                                {intl.formatMessage(messages.darkModeHint)}
+                            </div>
+                        </div>
+
+                        <div className={styles.field}>
                             <div className={styles.fieldLabel}>
                                 {intl.formatMessage(messages.globalCss)}
                             </div>
@@ -1020,7 +1067,8 @@ PersonalizationMenu.propTypes = {
             type: PropTypes.string,
             value: PropTypes.string
         }),
-        toolbarTransparent: PropTypes.bool
+        toolbarTransparent: PropTypes.bool,
+        darkMode: PropTypes.bool
     }),
     onSetCustomTheme: PropTypes.func,
     intl: intlShape
