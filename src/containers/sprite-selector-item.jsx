@@ -7,11 +7,12 @@ import {setHoveredSprite} from '../reducers/hovered-target';
 import {updateAssetDrag} from '../reducers/asset-drag';
 import VM from 'scratch-vm';
 import getCostumeUrl from '../lib/get-costume-url';
+import DragConstants from '../lib/drag-constants';
 import DragRecognizer from '../lib/drag-recognizer';
 import {getEventXY} from '../lib/touch-utils';
 
 import SpriteSelectorItemComponent from '../components/sprite-selector-item/sprite-selector-item.jsx';
-import {createWorkspaceWindow} from '../reducers/workspace-windows';
+import {closeWorkspaceWindow, createWorkspaceWindow} from '../reducers/workspace-windows';
 
 class SpriteSelectorItem extends React.PureComponent {
     constructor (props) {
@@ -21,6 +22,7 @@ class SpriteSelectorItem extends React.PureComponent {
             'setRef',
             'handleClick',
             'handleCreateWorkspace',
+            'handleCloseWorkspace',
             'handleDelete',
             'handleDuplicate',
             'handleExport',
@@ -103,7 +105,30 @@ class SpriteSelectorItem extends React.PureComponent {
         }
     }
     handleCreateWorkspace () {
-        this.props.onCreateWorkspace(this.props.id);
+        if (this.props.dragType !== DragConstants.SPRITE) return;
+        this.props.onCreateWorkspace(this.resolveTargetId(), this.props.name);
+    }
+    handleCloseWorkspace () {
+        if (!this.props.workspaceWindowId) return;
+        this.props.onCloseWorkspace(this.props.workspaceWindowId);
+    }
+    resolveTargetId () {
+        const runtime = this.props.vm && this.props.vm.runtime;
+        const id = this.props.id;
+        if (!runtime || typeof runtime.getTargetById !== 'function') return id;
+        if (runtime.getTargetById(id)) return id;
+        const targets = runtime.targets || [];
+        for (const target of targets) {
+            if (target && target.isOriginal && target.sprite && target.sprite.id === id) {
+                return target.id;
+            }
+        }
+        for (const target of targets) {
+            if (target && target.isOriginal && target.getName && target.getName() === id) {
+                return target.id;
+            }
+        }
+        return id;
     }
     handleDelete (e) {
         e.stopPropagation(); // To prevent from bubbling back to handleClick
@@ -142,6 +167,10 @@ class SpriteSelectorItem extends React.PureComponent {
             onDuplicateButtonClick,
             onExportButtonClick,
             onRenameButtonClick,
+            onCreateWorkspace: _onCreateWorkspace,
+            onCloseWorkspace: _onCloseWorkspace,
+            workspaceWindowId: _workspaceWindowId,
+            onDrag,
             dragPayload,
             receivedBlocks,
             costumeURL,
@@ -155,7 +184,8 @@ class SpriteSelectorItem extends React.PureComponent {
                 costumeURL={this.getCostumeData()}
                 preventContextMenu={this.dragRecognizer.gestureInProgress()}
                 onClick={this.handleClick}
-                onCreateWorkspace={this.handleCreateWorkspace}
+                onCreateWorkspace={this.props.dragType === DragConstants.SPRITE ? this.handleCreateWorkspace : null}
+                onCloseWorkspace={this.props.workspaceWindowId ? this.handleCloseWorkspace : null}
                 onDeleteButtonClick={onDeleteButtonClick ? this.handleDelete : null}
                 onDuplicateButtonClick={onDuplicateButtonClick ? this.handleDuplicate : null}
                 onExportButtonClick={onExportButtonClick ? this.handleExport : null}
@@ -185,6 +215,8 @@ SpriteSelectorItem.propTypes = {
     name: PropTypes.any,
     onClick: PropTypes.func,
     onCreateWorkspace: PropTypes.func.isRequired,
+    onCloseWorkspace: PropTypes.func.isRequired,
+    workspaceWindowId: PropTypes.string,
     onDeleteButtonClick: PropTypes.func,
     onRenameButtonClick: PropTypes.func,
     onDrag: PropTypes.func.isRequired,
@@ -195,18 +227,33 @@ SpriteSelectorItem.propTypes = {
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
-const mapStateToProps = (state, {id}) => ({
-    dragging: state.scratchGui.assetDrag.dragging,
-    receivedBlocks: state.scratchGui.hoveredTarget.receivedBlocks &&
-            state.scratchGui.hoveredTarget.sprite === id,
-    vm: state.scratchGui.vm
-});
+const mapStateToProps = (state, {id}) => {
+    const windows = state.scratchGui.workspaceWindows.windows;
+    let workspaceWindowId = null;
+    for (const windowRect of windows) {
+        if (windowRect.targets.indexOf(id) !== -1) {
+            workspaceWindowId = windowRect.id;
+            break;
+        }
+    }
+    return {
+        dragging: state.scratchGui.assetDrag.dragging,
+        hasWorkspace: !!workspaceWindowId,
+        receivedBlocks: state.scratchGui.hoveredTarget.receivedBlocks &&
+                state.scratchGui.hoveredTarget.sprite === id,
+        vm: state.scratchGui.vm,
+        workspaceWindowId: workspaceWindowId
+    };
+};
 const mapDispatchToProps = dispatch => ({
     dispatchSetHoveredSprite: spriteId => {
         dispatch(setHoveredSprite(spriteId));
     },
-    onCreateWorkspace: targetId => {
-        dispatch(createWorkspaceWindow(targetId));
+    onCreateWorkspace: (targetId, targetName) => {
+        dispatch(createWorkspaceWindow(targetId, targetName));
+    },
+    onCloseWorkspace: windowId => {
+        dispatch(closeWorkspaceWindow(windowId));
     },
     onDrag: data => dispatch(updateAssetDrag(data))
 });

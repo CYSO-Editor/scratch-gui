@@ -20,8 +20,14 @@
     left: 0;
     right: 0;
     bottom: 0;
+    overflow: hidden;
     pointer-events: none;
     z-index: 470;
+}
+
+[data-cyso-block-drop-target='true'] {
+    outline: 2px dashed rgba(90, 140, 230, 0.95) !important;
+    outline-offset: -3px !important;
 }
 
 .body-wrapper * {

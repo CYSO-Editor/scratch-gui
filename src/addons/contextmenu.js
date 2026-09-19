@@ -42,6 +42,22 @@ const onReactContextMenu = function (e) {
   } else {
     return;
   }
+  if (!ctxMenu) {
+    const menuId = ctxTarget.getAttribute("data-cyso-menu-id");
+    if (menuId && this.traps && this.traps.getInternalKey) {
+      const menuKey = this.traps.getInternalKey;
+      ctxMenu = Array.prototype.find.call(
+        document.querySelectorAll("body > nav.react-contextmenu"),
+        (candidate) => {
+          const fiber = candidate[menuKey];
+          return fiber && fiber.return && fiber.return.stateNode &&
+            fiber.return.stateNode.props && fiber.return.stateNode.props.id === menuId;
+        }
+      ) || null;
+    }
+  }
+  if (!ctxMenu) return;
+  ctxTarget.removeAttribute("sa-folders-context-type");
   const ctx = {
     menuItem: ctxMenu,
     target: ctxTarget,
@@ -90,6 +106,8 @@ const onReactContextMenu = function (e) {
       element: itemElem,
     });
   }
+  const folderType = ctxTarget.getAttribute("sa-folders-context-type");
+  if (folderType) ctxMenu.setAttribute("sa-folders-context-type", folderType);
   return;
 };
 

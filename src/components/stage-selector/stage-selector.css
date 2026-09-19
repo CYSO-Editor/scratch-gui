@@ -119,3 +119,16 @@ $header-height: calc($stage-menu-height - 2px);
     90% { box-shadow: 0 0 10px #7fff1e; }
     100% { box-shadow: none; }
 }
+
+.stage-selector[data-cyso-has-workspace='true']::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(80, 130, 220, 0.95);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.92);
+    z-index: 3;
+}

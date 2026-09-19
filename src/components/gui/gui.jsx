@@ -466,8 +466,8 @@ const GUIComponent = props => {
                             </Box>
                         </Box>
                     </Box>
+                    <WorkspaceWindows />
                 </Box>
-                <WorkspaceWindows />
                 <DragLayer />
             </Box>
         );

@@ -30,6 +30,34 @@
     box-shadow: 0 0 0 2px rgba(150, 185, 255, 0.9), 0 0 20px 2px rgba(150, 185, 255, 0.6), 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
+.windowFocused {
+    border-color: rgba(80, 130, 220, 0.85);
+    box-shadow: 0 0 0 1px rgba(80, 130, 220, 0.45), 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+::global(html.tw-misty-sand-theme.tw-misty-sand-dark) .windowFocused {
+    border-color: rgba(150, 185, 255, 0.85);
+    box-shadow: 0 0 0 1px rgba(150, 185, 255, 0.4), 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.windowDropTarget {
+    border-color: rgba(80, 130, 220, 1);
+    box-shadow: 0 0 0 2px rgba(80, 130, 220, 0.9), 0 0 24px 2px rgba(80, 130, 220, 0.45);
+}
+
+::global(html.tw-misty-sand-theme.tw-misty-sand-dark) .windowDropTarget {
+    border-color: rgba(150, 185, 255, 1);
+    box-shadow: 0 0 0 2px rgba(150, 185, 255, 0.9), 0 0 24px 2px rgba(150, 185, 255, 0.4);
+}
+
+.windowMaximized {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0;
+}
+
 .titleBar {
     display: flex;
     align-items: center;
@@ -234,6 +262,36 @@
     color: #d43a3a;
 }
 
+.titleButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+::global(html.tw-misty-sand-theme.tw-misty-sand-dark) .titleButton {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.titleButton:hover {
+    background: rgba(80, 130, 220, 0.16);
+    color: #3b6fd4;
+}
+
+::global(html.tw-misty-sand-theme.tw-misty-sand-dark) .titleButton:hover {
+    color: rgba(150, 185, 255, 1);
+}
+
 .content {
     position: relative;
     flex: 1;
@@ -243,6 +301,11 @@
 .blocksHost {
     position: absolute;
     inset: 0;
+}
+
+.blocksHost :global(.blocklyBlockDragSurface) {
+    pointer-events: none;
+    z-index: 1000;
 }
 
 .resizeHandle {
@@ -325,4 +388,82 @@
 
 .pickerItemDisabled:hover {
     background: transparent;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarVertical),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarVertical.blocklyScrollbarBackground),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarVertical .blocklyScrollbarBackground) {
+    width: 8px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHorizontal),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHorizontal.blocklyScrollbarBackground),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHorizontal .blocklyScrollbarBackground) {
+    height: 8px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarVertical.blocklyScrollbarHandle),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarVertical .blocklyScrollbarHandle) {
+    width: 5px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHorizontal.blocklyScrollbarHandle),
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHorizontal .blocklyScrollbarHandle) {
+    height: 5px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHandle) {
+    fill: rgba(120, 130, 150, 0.45) !important;
+    rx: 3px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarHandle:hover) {
+    fill: rgba(120, 130, 150, 0.7) !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyScrollbarBackground) {
+    fill: transparent !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyToolboxDiv) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 130, 150, 0.45) transparent;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar) {
+    width: 7px !important;
+    height: 7px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar-track) {
+    background: transparent !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar-thumb) {
+    background: rgba(120, 130, 150, 0.45) !important;
+    border-radius: 4px !important;
+}
+
+[data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar-thumb:hover) {
+    background: rgba(120, 130, 150, 0.7) !important;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) [data-ww-scrollbar-host] :global(.blocklyScrollbarHandle) {
+    fill: rgba(255, 255, 255, 0.28) !important;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) [data-ww-scrollbar-host] :global(.blocklyScrollbarHandle:hover) {
+    fill: rgba(255, 255, 255, 0.45) !important;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) [data-ww-scrollbar-host] :global(.blocklyToolboxDiv) {
+    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) [data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar-thumb) {
+    background: rgba(255, 255, 255, 0.28) !important;
+}
+
+:global(html.tw-misty-sand-theme.tw-misty-sand-dark) [data-ww-scrollbar-host] :global(.blocklyToolboxDiv::-webkit-scrollbar-thumb:hover) {
+    background: rgba(255, 255, 255, 0.45) !important;
 }

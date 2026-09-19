@@ -18,7 +18,7 @@ import {fetchCode} from '../lib/backpack-api';
 import {getEventXY} from '../lib/touch-utils';
 
 import StageSelectorComponent from '../components/stage-selector/stage-selector.jsx';
-import {createWorkspaceWindow} from '../reducers/workspace-windows';
+import {closeWorkspaceWindow, createWorkspaceWindow} from '../reducers/workspace-windows';
 
 import {getBackdropLibrary} from '../lib/libraries/tw-async-libraries';
 import {handleFileUpload, costumeUpload} from '../lib/file-uploader.js';
@@ -42,6 +42,7 @@ class StageSelector extends React.Component {
         bindAll(this, [
             'handleClick',
             'handleCreateWorkspace',
+            'handleCloseWorkspace',
             'handleNewBackdrop',
             'handleSurpriseBackdrop',
             'handleEmptyBackdrop',
@@ -95,6 +96,10 @@ class StageSelector extends React.Component {
     }
     handleCreateWorkspace () {
         this.props.onCreateWorkspace(this.props.id);
+    }
+    handleCloseWorkspace () {
+        if (!this.props.workspaceWindowId) return;
+        this.props.onCloseWorkspace(this.props.workspaceWindowId);
     }
     handleNewBackdrop (backdrops_, shouldActivateTab = true) {
         const backdrops = Array.isArray(backdrops_) ? backdrops_ : [backdrops_];
@@ -181,8 +186,8 @@ class StageSelector extends React.Component {
     render () {
         const componentProps = omit(this.props, [
             'asset', 'dispatchSetHoveredSprite', 'id', 'intl',
-            'onActivateTab', 'onCreateWorkspace', 'onSelect',
-            'onShowImporting', 'onCloseImporting',
+            'onActivateTab', 'onCreateWorkspace', 'onCloseWorkspace', 'onSelect',
+            'onShowImporting', 'onCloseImporting', 'workspaceWindowId',
             'isRtl', 'workspaceMetrics'
         ]);
         return (
@@ -193,6 +198,7 @@ class StageSelector extends React.Component {
                 onBackdropFileUploadClick={this.handleFileUploadClick}
                 onClick={this.handleClick}
                 onCreateWorkspace={this.handleCreateWorkspace}
+                onCloseWorkspace={this.props.workspaceWindowId ? this.handleCloseWorkspace : null}
                 onDrop={this.handleDrop}
                 onEmptyBackdropClick={this.handleEmptyBackdrop}
                 onMouseEnter={this.handleMouseEnter}
@@ -216,19 +222,34 @@ StageSelector.propTypes = {
     })
 };
 
-const mapStateToProps = (state, {asset, id}) => ({
-    isRtl: state.locales.isRtl,
-    url: asset && asset.encodeDataURI(),
-    vm: state.scratchGui.vm,
-    receivedBlocks: state.scratchGui.hoveredTarget.receivedBlocks &&
-            state.scratchGui.hoveredTarget.sprite === id,
-    raised: state.scratchGui.blockDrag,
-    workspaceMetrics: state.scratchGui.workspaceMetrics
-});
+const mapStateToProps = (state, {asset, id}) => {
+    const windows = state.scratchGui.workspaceWindows.windows;
+    let workspaceWindowId = null;
+    for (const windowRect of windows) {
+        if (windowRect.targets.indexOf(id) !== -1) {
+            workspaceWindowId = windowRect.id;
+            break;
+        }
+    }
+    return {
+        hasWorkspace: !!workspaceWindowId,
+        isRtl: state.locales.isRtl,
+        url: asset && asset.encodeDataURI(),
+        vm: state.scratchGui.vm,
+        receivedBlocks: state.scratchGui.hoveredTarget.receivedBlocks &&
+                state.scratchGui.hoveredTarget.sprite === id,
+        raised: state.scratchGui.blockDrag,
+        workspaceMetrics: state.scratchGui.workspaceMetrics,
+        workspaceWindowId: workspaceWindowId
+    };
+};
 
 const mapDispatchToProps = dispatch => ({
     onCreateWorkspace: targetId => {
         dispatch(createWorkspaceWindow(targetId));
+    },
+    onCloseWorkspace: windowId => {
+        dispatch(closeWorkspaceWindow(windowId));
     },
     onNewBackdropClick: e => {
         e.stopPropagation();

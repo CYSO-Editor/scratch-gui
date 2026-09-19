@@ -1,14 +1,15 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import {defineMessages, intlShape, injectIntl, FormattedMessage} from 'react-intl';
 import {ContextMenuTrigger} from 'react-contextmenu';
 
-import Box from '../box/box.jsx';
 import ActionMenu from '../action-menu/action-menu.jsx';
 import styles from './stage-selector.css';
 import {isRtl} from '@turbowarp/scratch-l10n';
-import {BorderedMenuItem, ContextMenu} from '../context-menu/context-menu.jsx';
+import {ContextMenu, MenuItem} from '../context-menu/context-menu.jsx';
+import {cysoMessage} from '../../lib/cyso-l10n';
 
 import backdropIcon from '../action-menu/icon--backdrop.svg';
 import fileUploadIcon from '../action-menu/icon--file-upload.svg';
@@ -61,6 +62,8 @@ const StageSelector = props => {
         onNewBackdropClick,
         onSurpriseBackdropClick,
         onEmptyBackdropClick,
+        onCloseWorkspace,
+        hasWorkspace,
         ...componentProps
     } = props;
     return (
@@ -72,6 +75,9 @@ const StageSelector = props => {
                     [styles.raised]: raised || dragOver,
                     [styles.receivedBlocks]: receivedBlocks
                 }),
+                'data-cyso-menu-id': stageContextMenuId,
+                'data-cyso-has-workspace': hasWorkspace ? 'true' : undefined,
+                title: hasWorkspace ? cysoMessage(intl, 'inWorkspace') : undefined,
                 onClick: onClick,
                 onMouseEnter: onMouseEnter,
                 onMouseLeave: onMouseLeave,
@@ -134,15 +140,23 @@ const StageSelector = props => {
                 tooltipPlace={isRtl(intl.locale) ? 'right' : 'left'}
                 onClick={onNewBackdropClick}
             />
-            <ContextMenu id={stageContextMenuId}>
-                <BorderedMenuItem onClick={onCreateWorkspace}>
-                    <FormattedMessage
-                        defaultMessage="Create Workspace"
-                        description="Menu item to create a separate workspace window for the stage"
-                        id="tw.stageSelector.createWorkspace"
-                    />
-                </BorderedMenuItem>
-            </ContextMenu>
+            {ReactDOM.createPortal((
+                <ContextMenu
+                    id={stageContextMenuId}
+                    style={{zIndex: 10000}}
+                >
+                    {onCloseWorkspace ? (
+                        <MenuItem onClick={onCloseWorkspace}>
+                            {cysoMessage(intl, 'closeWindow')}
+                        </MenuItem>
+                    ) : null}
+                    {onCreateWorkspace ? (
+                        <MenuItem onClick={onCreateWorkspace}>
+                            {cysoMessage(intl, 'createWorkspace')}
+                        </MenuItem>
+                    ) : null}
+                </ContextMenu>
+            ), document.body)}
         </ContextMenuTrigger>
     );
 };
@@ -152,10 +166,12 @@ StageSelector.propTypes = {
     containerRef: PropTypes.func,
     dragOver: PropTypes.bool,
     fileInputRef: PropTypes.func,
+    hasWorkspace: PropTypes.bool,
     intl: intlShape.isRequired,
     onBackdropFileUpload: PropTypes.func,
     onBackdropFileUploadClick: PropTypes.func,
     onClick: PropTypes.func,
+    onCloseWorkspace: PropTypes.func,
     onCreateWorkspace: PropTypes.func,
     onEmptyBackdropClick: PropTypes.func,
     onMouseEnter: PropTypes.func,

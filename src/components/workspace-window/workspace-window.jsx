@@ -1,19 +1,30 @@
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
+import {injectIntl, intlShape} from 'react-intl';
+
+import CysoContextMenu from '../cyso-context-menu/cyso-context-menu.jsx';
+import {cysoMessage} from '../../lib/cyso-l10n';
 import styles from './workspace-window.css';
 
 const WorkspaceWindowComponent = props => {
     const {
         activeTargetId,
         blockMenuId,
+        componentRef,
         dimmed,
         dragOver,
         height,
         id,
+        intl,
+        isDropTarget,
+        isFocused,
         isRtl,
+        maximized,
+        targetIds,
         targets,
         width,
-        windowRect,
+        windowNames,
         x,
         y,
         zIndex,
@@ -23,13 +34,14 @@ const WorkspaceWindowComponent = props => {
         onDropTab,
         onDragEnter,
         onDragLeave,
-        onFocus,
         onMouseDownCapture,
+        onOpenTargetInNewWindow,
         onResizeStart,
         onSetActiveTab,
         onTabDragStart,
         onTitleBarMouseDown,
         onToggleBlockMenu,
+        onToggleMaximize,
         setBlocksHost
     } = props;
 
@@ -38,17 +50,57 @@ const WorkspaceWindowComponent = props => {
         targetById[target.id] = target;
     }
 
+    const targetLabel = target => {
+        if (!target) return '?';
+        if (target.isStage) return cysoMessage(intl, 'stage');
+        const name = target.name;
+        if (typeof name === 'string' && name) return name;
+        if (typeof name === 'number') return String(name);
+        return '?';
+    };
+
     return (
         <div
-            className={`${styles.window} ${dimmed ? styles.windowDimmed : ''}`}
+            className={classNames(styles.window, {
+                [styles.windowDimmed]: dimmed,
+                [styles.windowFocused]: isFocused && !dimmed,
+                [styles.windowDropTarget]: isDropTarget,
+                [styles.windowMaximized]: maximized
+            })}
             data-workspace-window={id}
+            ref={componentRef}
             style={{left: x, top: y, width, height, zIndex}}
             onMouseDownCapture={onMouseDownCapture}
-            onMouseDown={onFocus}
         >
-            <div
-                className={styles.titleBar}
-                onMouseDown={onTitleBarMouseDown}
+            <CysoContextMenu
+                attributes={{
+                    className: styles.titleBar,
+                    title: `${cysoMessage(intl, 'focusHint')} · ${cysoMessage(intl, 'dragBlocksHint')}`,
+                    onMouseDown: onTitleBarMouseDown,
+                    onDoubleClick: e => {
+                        if (e.target.closest && e.target.closest('[data-no-drag]')) return;
+                        onToggleMaximize();
+                    }
+                }}
+                items={[
+                    {
+                        key: 'shortcuts',
+                        type: 'hint',
+                        label: cysoMessage(intl, 'shortcutHint')
+                    },
+                    {
+                        key: 'toggle-maximize',
+                        label: maximized ? cysoMessage(intl, 'restore') : cysoMessage(intl, 'maximize'),
+                        onSelect: onToggleMaximize
+                    },
+                    {
+                        key: 'close-window',
+                        label: cysoMessage(intl, 'closeWindow'),
+                        onSelect: onCloseWindow,
+                        border: true,
+                        danger: true
+                    }
+                ]}
             >
                 <div
                     className={`${styles.tabs} ${dragOver ? styles.tabsDragOver : ''}`}
@@ -57,22 +109,45 @@ const WorkspaceWindowComponent = props => {
                     onDragOver={e => e.preventDefault()}
                     onDrop={e => onDropTab(e, id)}
                 >
-                    {windowRect.targets.map(targetId => {
-                        const target = targetById[targetId] || {id: targetId, name: '?'};
+                    {targetIds.map(targetId => {
+                        const target = targetById[targetId] || {
+                            id: targetId,
+                            isStage: false,
+                            name: (windowNames && windowNames[targetId]) || '?'
+                        };
                         const isActive = targetId === activeTargetId;
+                        const tabMenuItems = [
+                            {
+                                key: 'close-tab',
+                                label: cysoMessage(intl, 'closeTab'),
+                                onSelect: () => onCloseTab(targetId)
+                            },
+                            {
+                                key: 'open-in-new-window',
+                                label: cysoMessage(intl, 'openInNewWindow'),
+                                onSelect: () => onOpenTargetInNewWindow(targetId),
+                                border: true
+                            }
+                        ];
                         return (
-                            <div
+                            <CysoContextMenu
+                                attributes={{
+                                    className: classNames(styles.tab, {
+                                        [styles.tabActive]: isActive
+                                    }),
+                                    'data-no-drag': 'true',
+                                    draggable: true,
+                                    title: targetLabel(target),
+                                    onClick: () => onSetActiveTab(targetId),
+                                    onDragStart: e => onTabDragStart(e, targetId),
+                                    onDragOver: e => e.preventDefault(),
+                                    onDrop: e => onDropTab(e, id)
+                                }}
+                                items={tabMenuItems}
                                 key={targetId}
-                                className={`${styles.tab} ${isActive ? styles.tabActive : ''}`}
-                                data-no-drag
-                                draggable
-                                onClick={() => onSetActiveTab(targetId)}
-                                onDragStart={e => onTabDragStart(e, targetId)}
-                                onDragOver={e => e.preventDefault()}
-                                onDrop={e => onDropTab(e, id)}
                             >
                                 <span className={styles.tabName}>
-                                    {target.isStage ? 'Stage' : target.name}
+                                    {targetLabel(target)}
                                 </span>
                                 <button
                                     className={styles.tabClose}
@@ -82,39 +157,87 @@ const WorkspaceWindowComponent = props => {
                                         onCloseTab(targetId);
                                     }}
                                 >
-                                    ×
+                                    <svg width="9" height="9" viewBox="0 0 12 12" aria-hidden="true">
+                                        <path
+                                            d="M2.5 2.5l7 7m0-7l-7 7"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
                                 </button>
-                            </div>
+                            </CysoContextMenu>
                         );
                     })}
                     <button
                         className={styles.addTab}
                         data-no-drag
-                        title="Add target"
+                        data-ww-add-tab="true"
+                        title={cysoMessage(intl, 'addTargetToWorkspace')}
                         onClick={onToggleBlockMenu}
                     >
                         +
                     </button>
-                    {dragOver ? <span className={styles.tabsHint}>松开以添加标签</span> : null}
+                    {dragOver ? <span className={styles.tabsHint}>{cysoMessage(intl, 'releaseToAddTab')}</span> : null}
                 </div>
+                <button
+                    className={styles.titleButton}
+                    data-no-drag
+                    title={maximized ? cysoMessage(intl, 'restore') : cysoMessage(intl, 'maximize')}
+                    onClick={onToggleMaximize}
+                >
+                    {maximized ? (
+                        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                            <path
+                                d="M4 1.5h6.5V8M1.5 4h6.5v6.5H1.5z"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.3"
+                            />
+                        </svg>
+                    ) : (
+                        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                            <rect
+                                x="1.5"
+                                y="1.5"
+                                width="9"
+                                height="9"
+                                rx="1"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.3"
+                            />
+                        </svg>
+                    )}
+                </button>
                 <button
                     className={styles.closeButton}
                     data-no-drag
-                    title="Close window"
+                    title={cysoMessage(intl, 'closeWindow')}
                     onClick={onCloseWindow}
                 >
-                    ×
+                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                        <path
+                            d="M2.5 2.5l7 7m0-7l-7 7"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                        />
+                    </svg>
                 </button>
-            </div>
+            </CysoContextMenu>
             <div className={styles.content}>
                 <div
                     className={styles.blocksHost}
                     ref={setBlocksHost}
                 />
                 {blockMenuId ? (
-                    <div className={styles.targetPicker}>
+                    <div
+                        className={styles.targetPicker}
+                        data-ww-picker="true"
+                    >
                         {targets.map(target => {
-                            const alreadyOpen = windowRect.targets.includes(target.id);
+                            const alreadyOpen = targetIds.includes(target.id);
                             return (
                                 <button
                                     key={target.id}
@@ -122,7 +245,7 @@ const WorkspaceWindowComponent = props => {
                                     disabled={alreadyOpen}
                                     onClick={() => onAddTabClick(target.id)}
                                 >
-                                    {target.isStage ? 'Stage' : target.name}
+                                    {targetLabel(target)}
                                 </button>
                             );
                         })}
@@ -140,20 +263,24 @@ const WorkspaceWindowComponent = props => {
 WorkspaceWindowComponent.propTypes = {
     activeTargetId: PropTypes.string,
     blockMenuId: PropTypes.string,
+    componentRef: PropTypes.func,
     dimmed: PropTypes.bool,
     dragOver: PropTypes.bool,
     height: PropTypes.number,
     id: PropTypes.string,
+    intl: intlShape.isRequired,
+    isDropTarget: PropTypes.bool,
+    isFocused: PropTypes.bool,
     isRtl: PropTypes.bool,
+    maximized: PropTypes.bool,
+    targetIds: PropTypes.arrayOf(PropTypes.string),
     targets: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,
         isStage: PropTypes.bool,
         name: PropTypes.string
     })),
     width: PropTypes.number,
-    windowRect: PropTypes.shape({
-        targets: PropTypes.arrayOf(PropTypes.string)
-    }),
+    windowNames: PropTypes.object, // eslint-disable-line react/forbid-prop-types
     x: PropTypes.number,
     y: PropTypes.number,
     zIndex: PropTypes.number,
@@ -163,14 +290,15 @@ WorkspaceWindowComponent.propTypes = {
     onDropTab: PropTypes.func,
     onDragEnter: PropTypes.func,
     onDragLeave: PropTypes.func,
-    onFocus: PropTypes.func,
     onMouseDownCapture: PropTypes.func,
+    onOpenTargetInNewWindow: PropTypes.func,
     onResizeStart: PropTypes.func,
     onSetActiveTab: PropTypes.func,
     onTabDragStart: PropTypes.func,
     onTitleBarMouseDown: PropTypes.func,
     onToggleBlockMenu: PropTypes.func,
+    onToggleMaximize: PropTypes.func,
     setBlocksHost: PropTypes.func
 };
 
-export default WorkspaceWindowComponent;
+export default injectIntl(WorkspaceWindowComponent);

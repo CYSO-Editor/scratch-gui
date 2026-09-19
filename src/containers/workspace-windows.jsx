@@ -5,9 +5,11 @@ import {connect} from 'react-redux';
 
 import VM from 'scratch-vm';
 import WorkspaceWindow from './workspace-window.jsx';
+import workspaceRegistry from '../lib/workspace-registry';
 import {
     createWorkspaceWindow,
-    closeWorkspaceWindow
+    closeWorkspaceWindow,
+    pruneWorkspaceWindows
 } from '../reducers/workspace-windows';
 
 import styles from '../components/gui/gui.css';
@@ -16,19 +18,27 @@ class WorkspaceWindows extends React.Component {
     constructor (props) {
         super(props);
         this.focusedWindow = null;
+        this.state = {
+            dropTargetWindowId: null,
+            focusedWindowId: null
+        };
         bindAll(this, [
             'handleKeyDown',
             'handleDocumentMouseDown',
             'handleTargetsUpdate',
-            'cleanupMissingTargets'
+            'cleanupMissingTargets',
+            'handleDropTargetChange'
         ]);
     }
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('mousedown', this.handleDocumentMouseDown);
         this.props.vm.addListener('targetsUpdate', this.handleTargetsUpdate);
+        workspaceRegistry.ensureMainWorkspace(this.props.vm);
+        this.unsubscribeDropTarget = workspaceRegistry.subscribeDropTarget(this.handleDropTargetChange);
     }
     componentDidUpdate (prevProps) {
+        workspaceRegistry.ensureMainWorkspace(this.props.vm);
         const claimedNow = new Set();
         for (const w of this.props.windows || []) {
             for (const t of w.targets) claimedNow.add(t);
@@ -54,25 +64,44 @@ class WorkspaceWindows extends React.Component {
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('mousedown', this.handleDocumentMouseDown);
         this.props.vm.removeListener('targetsUpdate', this.handleTargetsUpdate);
+        if (this.unsubscribeDropTarget) this.unsubscribeDropTarget();
+    }
+    handleDropTargetChange (windowId) {
+        if (this.state.dropTargetWindowId === windowId) return;
+        this.setState({dropTargetWindowId: windowId});
     }
     handleDocumentMouseDown (e) {
         const el = e.target;
         const winEl = el && el.closest ? el.closest('[data-workspace-window]') : null;
-        this.focusedWindow = winEl ? winEl.dataset.workspaceWindow : null;
+        const focusedWindowId = winEl ? winEl.dataset.workspaceWindow : null;
+        this.focusedWindow = focusedWindowId;
+        if (this.state.focusedWindowId !== focusedWindowId) {
+            this.setState({focusedWindowId: focusedWindowId});
+        }
+    }
+    getFocusedWindowId () {
+        const windows = this.props.windows || [];
+        if (!this.focusedWindow) return null;
+        return windows.some(w => w.id === this.focusedWindow) ? this.focusedWindow : null;
     }
     handleKeyDown (e) {
-        if (!e.ctrlKey || e.key.toLowerCase() !== 'w') return;
-        const tagName = (e.target && e.target.tagName) || '';
+        if (!e.key || !e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) return;
+        if (e.key.toLowerCase() !== 'w') return;
+        const target = e.target;
+        const tagName = (target && target.tagName) || '';
         if (tagName === 'INPUT' || tagName === 'TEXTAREA') return;
-        e.preventDefault();
-        const focusId = this.focusedWindow;
-        const focusStillOpen = focusId &&
-            this.props.windows.some(w => w.id === focusId);
-        if (focusStillOpen) {
-            this.props.onCloseWindow(focusId);
-        } else if (this.props.editingTarget) {
-            this.props.onCreateWindow(this.props.editingTarget);
+        if (target && target.isContentEditable) return;
+        const focusedWindowId = this.getFocusedWindowId();
+        if (focusedWindowId) {
+            e.preventDefault();
+            this.focusedWindow = null;
+            this.setState({focusedWindowId: null});
+            this.props.onCloseWindow(focusedWindowId);
+            return;
         }
+        if (!this.props.editingTarget) return;
+        e.preventDefault();
+        this.props.onCreateWindow(this.props.editingTarget);
     }
     handleTargetsUpdate () {
         this.cleanupMissingTargets();
@@ -86,6 +115,7 @@ class WorkspaceWindows extends React.Component {
                 if (target.isOriginal) knownIds.add(target.id);
             }
         }
+        if (knownIds.size === 0) return;
         let changed = false;
         const newWindows = windows.map(w => {
             const targets = w.targets.filter(id => knownIds.has(id));
@@ -102,16 +132,26 @@ class WorkspaceWindows extends React.Component {
             this.props.onCleanupWindows(newWindows);
         }
     }
+    getWindowOptions () {
+        const media = this.props.optionsMedia;
+        if (!this.optionsCache || this.optionsCache.media !== media) {
+            this.optionsCache = {media: media, value: {media: media}};
+        }
+        return this.optionsCache.value;
+    }
     render () {
         if (!this.props.windows || this.props.windows.length === 0) return null;
         const themeId = this.props.themeId || 'default';
+        const options = this.getWindowOptions();
         return (
             <div className={styles.workspaceWindowsLayer}>
                 {this.props.windows.map(windowRect => (
                     <WorkspaceWindow
+                        isDropTarget={windowRect.id === this.state.dropTargetWindowId}
+                        isFocused={windowRect.id === this.state.focusedWindowId}
                         key={`${windowRect.id}/${themeId}`}
+                        options={options}
                         windowId={windowRect.id}
-                        options={{media: this.props.optionsMedia}}
                     />
                 ))}
             </div>
@@ -148,9 +188,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => ({
     onCreateWindow: targetId => dispatch(createWorkspaceWindow(targetId)),
     onCloseWindow: windowId => dispatch(closeWorkspaceWindow(windowId)),
-    onCleanupWindows: windows => {
-        dispatch({type: 'scratch-gui/workspace-windows/PRUNE', windows: windows});
-    }
+    onCleanupWindows: windows => dispatch(pruneWorkspaceWindows(windows))
 });
 
 export default connect(
