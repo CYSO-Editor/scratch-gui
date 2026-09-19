@@ -17,6 +17,7 @@ import Geolocate from './geolocate.jsx';
 import Embed from './embed.jsx';
 import Download from './download.jsx';
 import CustomPermission from './custom-permission.jsx';
+import EnableCYSOCore from './enable-cyso-core.jsx';
 import DelayedMountPropertyHOC from './delayed-mount-property-hoc.jsx';
 import styles from './security-manager-modal.css';
 
@@ -77,6 +78,8 @@ const SecurityManagerModalComponent = props => {
                     <Download {...props.data} />
                 ) : props.type === SecurityModals.CustomPermission ? (
                     <CustomPermission {...props.data} />
+                ) : props.type === SecurityModals.EnableCYSOCore ? (
+                    <EnableCYSOCore {...props.data} />
                 ) : null}
 
                 <Box className={styles.buttons}>

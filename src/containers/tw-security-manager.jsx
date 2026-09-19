@@ -15,7 +15,8 @@ import {
     loadDefaults,
     saveDefaults,
     loadExtensionPermissions,
-    saveExtensionPermissions
+    saveExtensionPermissions,
+    getAdminToken
 } from '../lib/extension-permissions';
 import {
     addLoadedExtension,
@@ -29,17 +30,18 @@ import {
 
 
 const getCurrentExtensionId = () => {
-    if (typeof window !== 'undefined') {
-        const stack = window.__cysoExtensionIdStack;
-        if (Array.isArray(stack) && stack.length) {
-            return stack[stack.length - 1];
-        }
-        if (window.__cysoCurrentExtensionId) {
-            return window.__cysoCurrentExtensionId;
-        }
+    if (typeof EditorPreload !== 'undefined' && typeof EditorPreload.getActiveExtensionId === 'function') {
+        return EditorPreload.getActiveExtensionId();
     }
     return null;
 };
+
+let cysoCoreEnableDecision = null;
+
+const getIsDarkMode = () => typeof document !== 'undefined' && (
+    document.documentElement.classList.contains('tw-misty-sand-dark') ||
+    document.documentElement.classList.contains('tw-dark-theme')
+);
 
 const usedPermissions = new Set();
 
@@ -136,7 +138,15 @@ let securityManagerInstance = null;
 class TWSecurityManagerComponent extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleAllowed', 'handleDenied', 'handleDefaultPermissionChange', 'closeExtensionPermissionModal']);
+        bindAll(this, [
+            'handleAllowed',
+            'handleDenied',
+            'handleDefaultPermissionChange',
+            'handleExtensionPermissionChange',
+            'applyCYSOCoreEnabled',
+            'ensureCYSOCoreEnabled',
+            'closeExtensionPermissionModal'
+        ]);
         bindAll(this, SECURITY_MANAGER_METHODS);
         this.nextModalCallbacks = [];
         this.modalLocked = false;
@@ -186,7 +196,8 @@ class TWSecurityManagerComponent extends React.Component {
             
             try {
                 if (typeof EditorPreload !== 'undefined' && EditorPreload.registerExtensionPermissions) {
-                    const result = await EditorPreload.registerExtensionPermissions(extensionId, requested, extensionName || extensionId);
+                    const result = await EditorPreload.registerExtensionPermissions(
+                        getAdminToken(), extensionId, requested, extensionName || extensionId);
                     const serverGranted = (result && result.permissions) || granted;
                     const serverPruned = (result && result.pruned) || [];
                     
@@ -209,17 +220,8 @@ class TWSecurityManagerComponent extends React.Component {
             const previewedInBatch = Boolean(this.acknowledgedBatchExtensions) &&
                 this.acknowledgedBatchExtensions.has(baseId);
             if (previewedInBatch) {
-                
                 this.acknowledgedBatchExtensions.delete(baseId);
-                
-                const runtimeEnabled = this.props.vm?.runtime;
-                if (runtimeEnabled) {
-                    runtimeEnabled.cysoCoreEnabled = true;
-                    this.props.setCYSOCoreEnabled(true);
-                    if (typeof EditorPreload !== 'undefined') {
-                        EditorPreload.setCYSOCoreEnabled(true);
-                    }
-                }
+                this.ensureCYSOCoreEnabled();
             }
 
             if (!alreadyQueued && !previewedInBatch) {
@@ -374,13 +376,12 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleDefaultPermissionChange (permissionType, setting) {
-        
         this.props.setDefaultPermission(permissionType, setting);
 
         saveDefaults({ [permissionType]: setting });
 
         if (typeof EditorPreload !== 'undefined' && EditorPreload.setDefault) {
-            EditorPreload.setDefault(permissionType, setting);
+            EditorPreload.setDefault(getAdminToken(), permissionType, setting);
         }
 
         const runtime = this.props.vm?.runtime;
@@ -403,24 +404,64 @@ class TWSecurityManagerComponent extends React.Component {
         });
     }
 
-    closeExtensionPermissionModal () {
-        
-        
-        const runtime = this.props.vm?.runtime;
+    handleExtensionPermissionChange (extensionId, permissionType, setting) {
+        this.props.setExtensionPermission(extensionId, permissionType, setting);
+
+        const current = loadExtensionPermissions(extensionId);
+        const next = Object.assign({}, current, {[permissionType]: setting});
+        saveExtensionPermissions(extensionId, next);
+
+        const runtime = this.props.vm && this.props.vm.runtime;
         if (runtime) {
-            runtime.cysoCoreEnabled = true;
-            this.props.setCYSOCoreEnabled(true);
-            if (typeof EditorPreload !== 'undefined') {
-                EditorPreload.setCYSOCoreEnabled(true);
-            }
-            this.props.vm.storeCYSOConfig();
+            runtime.extensionPermissions = runtime.extensionPermissions || {};
+            runtime.extensionPermissions[extensionId] = next;
         }
 
-        this.setState({
-            showExtensionPermissionModal: false,
-            pendingExtension: null
-        }, () => {
-            this.flushExtensionPermissionQueue();
+        if (typeof EditorPreload !== 'undefined' && EditorPreload.setExtensionPermission) {
+            EditorPreload.setExtensionPermission(getAdminToken(), extensionId, permissionType, setting);
+        }
+
+        if (runtime && runtime.cysoCoreEnabled && this.props.vm.storeCYSOConfig) {
+            this.props.vm.storeCYSOConfig();
+        }
+    }
+
+    applyCYSOCoreEnabled () {
+        const runtime = this.props.vm && this.props.vm.runtime;
+        if (runtime) {
+            runtime.cysoCoreEnabled = true;
+        }
+        this.props.setCYSOCoreEnabled(true);
+        if (typeof EditorPreload !== 'undefined' && EditorPreload.setCYSOCoreEnabled) {
+            EditorPreload.setCYSOCoreEnabled(getAdminToken(), true);
+        }
+        if (this.props.vm && this.props.vm.storeCYSOConfig) {
+            this.props.vm.storeCYSOConfig();
+        }
+    }
+
+    async ensureCYSOCoreEnabled () {
+        if (this.props.cysoCoreEnabled) return true;
+        const {showModal, releaseLock} = await this.acquireModalLock();
+        if (cysoCoreEnableDecision !== null) {
+            releaseLock();
+            if (cysoCoreEnableDecision) this.applyCYSOCoreEnabled();
+            return cysoCoreEnableDecision;
+        }
+        const allowed = await showModal(SecurityModals.EnableCYSOCore, {isDarkMode: getIsDarkMode()});
+        cysoCoreEnableDecision = !!allowed;
+        if (cysoCoreEnableDecision) this.applyCYSOCoreEnabled();
+        return cysoCoreEnableDecision;
+    }
+
+    closeExtensionPermissionModal () {
+        this.ensureCYSOCoreEnabled().then(() => {
+            this.setState({
+                showExtensionPermissionModal: false,
+                pendingExtension: null
+            }, () => {
+                this.flushExtensionPermissionQueue();
+            });
         });
     }
 
@@ -449,22 +490,32 @@ class TWSecurityManagerComponent extends React.Component {
             this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
         }
         
+        if (prevProps.cysoCoreEnabled && !this.props.cysoCoreEnabled) {
+            cysoCoreEnableDecision = null;
+        }
+
         if (!prevProps.cysoCoreEnabled && this.props.vm && this.props.vm.runtime) {
             const runtime = this.props.vm.runtime;
             if (runtime.cysoCoreEnabled) {
-                this.props.setCYSOCoreEnabled(true);
-                const extPerms = runtime.extensionPermissions || {};
-                Object.entries(extPerms).forEach(([extId, perms]) => {
-                    if (perms && typeof perms === 'object') {
-                        this.props.registerExtensionPermissions(extId, perms);
-                        saveExtensionPermissions(extId, perms);
-                    }
-                });
-                if (typeof EditorPreload !== 'undefined') {
-                    EditorPreload.setCYSOCoreEnabled(true);
-                }
+                this.syncCYSOCoreFromRuntime(runtime);
             }
         }
+    }
+
+    syncCYSOCoreFromRuntime (runtime) {
+        this.ensureCYSOCoreEnabled().then(enabled => {
+            if (!enabled) {
+                runtime.cysoCoreEnabled = false;
+                return;
+            }
+            const extPerms = runtime.extensionPermissions || {};
+            Object.entries(extPerms).forEach(([extId, perms]) => {
+                if (perms && typeof perms === 'object') {
+                    this.props.registerExtensionPermissions(extId, perms);
+                    saveExtensionPermissions(extId, perms);
+                }
+            });
+        });
     }
 
     componentWillUnmount () {
@@ -507,8 +558,15 @@ class TWSecurityManagerComponent extends React.Component {
 
     handleCysoCoreLoaded = (event) => {
         const {cysoCoreEnabled, extensionPermissions} = event.detail;
-        if (cysoCoreEnabled) {
-            this.props.setCYSOCoreEnabled(true);
+        if (!cysoCoreEnabled) return;
+
+        this.ensureCYSOCoreEnabled().then(enabled => {
+            if (!enabled) {
+                if (this.props.vm && this.props.vm.runtime) {
+                    this.props.vm.runtime.cysoCoreEnabled = false;
+                }
+                return;
+            }
             const extPerms = extensionPermissions || {};
             Object.entries(extPerms).forEach(([extId, perms]) => {
                 if (perms && typeof perms === 'object') {
@@ -516,10 +574,7 @@ class TWSecurityManagerComponent extends React.Component {
                     saveExtensionPermissions(extId, perms);
                 }
             });
-            if (typeof EditorPreload !== 'undefined') {
-                EditorPreload.setCYSOCoreEnabled(true);
-            }
-        }
+        });
     };
 
     updateSecurityManagerMethods () {
@@ -643,7 +698,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canLoadExtensionFromProject (url) {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         if (isTrustedExtension(url)) {
@@ -813,7 +868,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -837,7 +892,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -849,7 +904,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -858,7 +913,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordAudio () {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -870,7 +925,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordVideo () {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -882,7 +937,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canReadClipboard () {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -894,7 +949,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canNotify () {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -906,7 +961,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canGeolocate () {
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -921,7 +976,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -940,7 +995,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled) {
+        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
             return true;
         }
         
@@ -949,10 +1004,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     render () {
-        const isDarkMode = typeof document !== 'undefined' && (
-            document.documentElement.classList.contains('tw-misty-sand-dark') ||
-            document.documentElement.classList.contains('tw-dark-theme')
-        );
+        const isDarkMode = getIsDarkMode();
 
         if (this.state.type) {
             return (
@@ -965,23 +1017,25 @@ class TWSecurityManagerComponent extends React.Component {
                         isDarkMode={isDarkMode}
                         key={this.state.modalCount}
                     />
-                    {this.state.showExtensionPermissionModal && (
+                    {this.state.showExtensionPermissionModal && this.state.pendingExtension && (
                         <ExtensionPermissionModal
+                            key={this.state.pendingExtension.id}
                             extension={this.state.pendingExtension}
-                            permissions={this.state.pendingExtension ? this.state.pendingExtension.permissions : []}
-                            onClose={this.closeExtensionPermissionModal.bind(this)}
+                            onPermissionChange={this.handleExtensionPermissionChange}
+                            onClose={this.closeExtensionPermissionModal}
                             isDarkMode={isDarkMode}
                         />
                     )}
                 </React.Fragment>
             );
         }
-        if (this.state.showExtensionPermissionModal) {
+        if (this.state.showExtensionPermissionModal && this.state.pendingExtension) {
             return (
             <ExtensionPermissionModal
+                key={this.state.pendingExtension.id}
                 extension={this.state.pendingExtension}
-                permissions={this.state.pendingExtension ? this.state.pendingExtension.permissions : []}
-                onClose={this.closeExtensionPermissionModal.bind(this)}
+                onPermissionChange={this.handleExtensionPermissionChange}
+                onClose={this.closeExtensionPermissionModal}
                 isDarkMode={isDarkMode}
             />
             );
