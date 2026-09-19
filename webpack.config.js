@@ -66,8 +66,6 @@ const base = {
         alias: {
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
-            // 强制 scratch-blocks 走新版 compressed 入口（含自定义返回值等新特性）。
-            // 否则可能解析到旧的 uncompressed 版本，导致
             // workspace.enableProcedureReturns 等新 API 缺失。
             'scratch-blocks$': path.resolve(__dirname, 'node_modules/scratch-blocks/shim/vertical.js')
         }
