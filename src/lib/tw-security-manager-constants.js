@@ -11,7 +11,8 @@ const SecurityModals = {
     Geolocate: 'Geolocate',
     Embed: 'Embed',
     Download: 'Download',
-    CustomPermission: 'CustomPermission'
+    CustomPermission: 'CustomPermission',
+    EnableCYSOCore: 'EnableCYSOCore'
 };
 
 export default SecurityModals;

@@ -1,0 +1,28 @@
+.container {
+    padding: 0.25rem 0 0.5rem;
+}
+
+.title {
+    margin: 0 0 0.75rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.description {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #4b5563;
+}
+
+.warning {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #b45309;
+}
+
+.textDark {
+    color: var(--ui-modal-foreground, #e8e9ee);
+}

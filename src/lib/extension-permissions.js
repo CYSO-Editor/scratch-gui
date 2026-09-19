@@ -125,6 +125,11 @@ Object.keys(PERMISSION_GROUPS).forEach(key => {
 
 const STORAGE_KEY = 'cyso-core-permissions';
 
+const adminToken = (typeof EditorPreload !== 'undefined' && typeof EditorPreload.claimPermissionAdmin === 'function') ?
+    EditorPreload.claimPermissionAdmin() : null;
+
+const getAdminToken = () => adminToken;
+
 const loadAll = () => {
     try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -190,5 +195,6 @@ export {
     loadDefaults,
     saveDefaults,
     loadExtensionPermissions,
-    saveExtensionPermissions
+    saveExtensionPermissions,
+    getAdminToken
 };

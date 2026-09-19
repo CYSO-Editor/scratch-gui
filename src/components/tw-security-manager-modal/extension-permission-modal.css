@@ -220,6 +220,70 @@
 .dark .helpCircle { background: rgba(255, 255, 255, 0.12); color: #9ca3af; }
 .dark .helpCircle:hover { background: rgba(255, 255, 255, 0.2); color: #d1d5db; transform: scale(1.1); }
 
+.permRight {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+}
+
+.settingGroup {
+    display: inline-flex;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.settingButton {
+    border: none;
+    padding: 0.3125rem 0.625rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.modalEnhanced:not(.dark) .settingButton {
+    background: #e5e7eb;
+    color: #6b7280;
+}
+
+.modalEnhanced:not(.dark) .settingButton:hover {
+    background: #d1d5db;
+    color: #374151;
+}
+
+.dark .settingButton {
+    background: rgba(255, 255, 255, 0.08);
+    color: #9ca3af;
+}
+
+.dark .settingButton:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #e5e7eb;
+}
+
+.modalEnhanced:not(.dark) .settingButtonActive {
+    background: #111827;
+    color: #ffffff;
+}
+
+.modalEnhanced:not(.dark) .settingButtonActive:hover {
+    background: #374151;
+    color: #ffffff;
+}
+
+.dark .settingButtonActive {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.dark .settingButtonActive:hover {
+    background: #60a5fa;
+    color: #ffffff;
+}
+
 .riskBadge {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -326,6 +390,8 @@
     .extensionIcon { font-size: 1.375rem; }
     .title { font-size: 1rem; }
     .permissionCard { flex-direction: column; align-items: stretch; gap: 0.625rem; padding: 0.875rem; }
+    .permRight { justify-content: space-between; }
+    .settingButton { flex: 1; }
     .noticeBox { margin: 0 1.25rem 1rem; }
     .actions { padding: 0 1.25rem 1.25rem; }
     .confirmButton { width: 100%; }

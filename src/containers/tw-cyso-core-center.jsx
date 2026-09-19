@@ -13,6 +13,7 @@ import {
     saveDefaults,
     loadExtensionPermissions,
     saveExtensionPermissions,
+    getAdminToken,
     PERMISSION_GROUPS
 } from '../lib/extension-permissions';
 
@@ -46,7 +47,7 @@ class CYSOCoreCenter extends React.Component {
         saveDefaults({ [permissionType]: setting });
 
         if (typeof EditorPreload !== 'undefined' && EditorPreload.setDefault) {
-            EditorPreload.setDefault(permissionType, setting);
+            EditorPreload.setDefault(getAdminToken(), permissionType, setting);
         }
     }
 
@@ -65,7 +66,7 @@ class CYSOCoreCenter extends React.Component {
         }
 
         if (typeof EditorPreload !== 'undefined' && EditorPreload.setExtensionPermission) {
-            EditorPreload.setExtensionPermission(extensionId, permissionType, setting);
+            EditorPreload.setExtensionPermission(getAdminToken(), extensionId, permissionType, setting);
         }
 
         if (runtime && runtime.cysoCoreEnabled && this.props.vm.storeCYSOConfig) {
