@@ -528,6 +528,8 @@ class Blocks extends React.Component {
             this.props.updateToolboxState(toolboxXML);
         }
 
+        this._monitorCheckboxStates = new Map();
+
         if (this.props.vm.editingTarget && !this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
             this.onWorkspaceMetricsChange();
         }
@@ -572,16 +574,31 @@ class Blocks extends React.Component {
         // TODO: What about monitors that have fields? See todo in scratch-vm blocks.js changeBlock:
         // https://github.com/LLK/scratch-vm/blob/2373f9483edaf705f11d62662f7bb2a57fbb5e28/src/engine/blocks.js#L569-L576
         const flyout = this.workspace.getFlyout();
+        if (!flyout) return;
+        if (!this._monitorCheckboxStates) {
+            this._monitorCheckboxStates = new Map();
+        }
+        const lastStates = this._monitorCheckboxStates;
+        const seen = new Set();
         for (const monitor of monitors.values()) {
             const blockId = monitor.get('id');
             const isVisible = monitor.get('visible');
-            flyout.setCheckboxState(blockId, isVisible);
-            // We also need to update the isMonitored flag for this block on the VM, since it's used to determine
-            // whether the checkbox is activated or not when the checkbox is re-displayed (e.g. local variables/blocks
-            // when switching between sprites).
-            const block = this.props.vm.runtime.monitorBlocks.getBlock(blockId);
-            if (block) {
-                block.isMonitored = isVisible;
+            seen.add(blockId);
+            if (lastStates.get(blockId) !== isVisible) {
+                lastStates.set(blockId, isVisible);
+                flyout.setCheckboxState(blockId, isVisible);
+                // We also need to update the isMonitored flag for this block on the VM, since it's used to determine
+                // whether the checkbox is activated or not when the checkbox is re-displayed (e.g. local variables/blocks
+                // when switching between sprites).
+                const block = this.props.vm.runtime.monitorBlocks.getBlock(blockId);
+                if (block) {
+                    block.isMonitored = isVisible;
+                }
+            }
+        }
+        for (const blockId of Array.from(lastStates.keys())) {
+            if (!seen.has(blockId)) {
+                lastStates.delete(blockId);
             }
         }
     }

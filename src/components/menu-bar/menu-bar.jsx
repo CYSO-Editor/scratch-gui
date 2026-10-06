@@ -35,6 +35,7 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CYSOCoreButton from './cyso-core-button.jsx';
+import UpdateNoticeButton from './update-notice-button.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal, openCYSOCoreCenter} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -1051,6 +1052,13 @@ class MenuBar extends React.Component {
                     />
                 )}
 
+                <UpdateNoticeButton
+                    message={this.props.updateAvailableMessage}
+                    isDarkMode={this.props.isDarkMode}
+                    isRtl={this.props.isRtl}
+                    onClick={this.props.onClickUpdateNotice}
+                />
+
                 {this.props.canChangeTheme && (
                     <PersonalizationMenu
                         open={this.props.personalizationMenuOpen}
@@ -1108,6 +1116,7 @@ MenuBar.propTypes = {
     handleSaveProject: PropTypes.func,
     intl: intlShape,
     isPlayerOnly: PropTypes.bool,
+    isDarkMode: PropTypes.bool,
     isRtl: PropTypes.bool,
     isShared: PropTypes.bool,
     isShowingProject: PropTypes.bool,
@@ -1133,6 +1142,8 @@ MenuBar.propTypes = {
     onClickAccount: PropTypes.func,
     onClickAddonSettings: PropTypes.func,
     onClickCYSOCoreCenter: PropTypes.func,
+    onClickUpdateNotice: PropTypes.func,
+    updateAvailableMessage: PropTypes.string,
     onClickDesktopSettings: PropTypes.func,
     onClickPackager: PropTypes.func,
     onClickRestorePoints: PropTypes.func,

@@ -49,7 +49,8 @@ const MonitorList = props => (
 MonitorList.propTypes = {
     draggable: PropTypes.bool.isRequired,
     monitors: PropTypes.shape({
-        valueSeq: PropTypes.func
+        valueSeq: PropTypes.func,
+        keys: PropTypes.func
     }),
     onMonitorChange: PropTypes.func.isRequired,
     stageSize: PropTypes.shape({

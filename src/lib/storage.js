@@ -6,8 +6,15 @@ import builtinAssets from './builtin-assets';
 class Storage extends ScratchStorage {
     constructor () {
         super();
-        this.cacheDefaultProject();
-        this.cacheBuiltinAssets();
+        Promise.resolve().then(() => {
+            try {
+                this.cacheDefaultProject();
+                this.cacheBuiltinAssets();
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.error('Failed to cache builtin assets:', error);
+            }
+        });
     }
     addOfficialScratchWebStores () {
         this.addWebStore(

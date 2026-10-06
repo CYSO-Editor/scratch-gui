@@ -86,7 +86,9 @@ const vmManagerHOC = function (WrappedComponent) {
                     if (!this.props.isStarted) {
                         // Wrap in a setTimeout because skin loading in
                         // the renderer can be async.
-                        setTimeout(() => this.props.vm.renderer.draw());
+                        setTimeout(() => {
+                            this.props.vm.renderer.draw();
+                        });
                     }
                 })
                 .catch(e => {

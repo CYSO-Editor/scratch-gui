@@ -83,8 +83,34 @@ class Stage extends React.Component {
 
             // tw: handle changes to high quality pen
             this.props.vm.renderer.on('UseHighQualityRenderChanged', this.props.onHighQualityPenChanged);
+
+            this.applyRenderConfig();
+            this.handleRenderSettingsChanged = event => this.applyRenderConfig(event.detail);
+            window.addEventListener('cyso:render-settings', this.handleRenderSettingsChanged);
         }
         this.props.vm.attachV2BitmapAdapter(new V2BitmapAdapter());
+    }
+    applyRenderConfig (config) {
+        const renderConfig = config || window.__CYsoRenderConfig;
+        if (!renderConfig || !this.renderer) return;
+        try {
+            if (renderConfig.gpuMode === 'force-gpu') {
+                this.renderer.setUseGpuMode(Renderer.UseGpuModes.ForceGPU);
+            } else if (renderConfig.gpuMode === 'force-cpu') {
+                this.renderer.setUseGpuMode(Renderer.UseGpuModes.ForceCPU);
+            } else {
+                this.renderer.setUseGpuMode(Renderer.UseGpuModes.Automatic);
+            }
+        } catch (error) {
+            // Ignore: render settings must never break the editor
+        }
+        try {
+            if (typeof this.renderer.setResolutionCap === 'function') {
+                this.renderer.setResolutionCap(renderConfig.resolutionCap || 0);
+            }
+        } catch (error) {
+            // Ignore
+        }
     }
     componentDidMount () {
         this.attachRectEvents();
@@ -118,6 +144,9 @@ class Stage extends React.Component {
         this.detachMouseEvents(this.canvas);
         this.detachRectEvents();
         this.stopColorPickingLoop();
+        if (this.handleRenderSettingsChanged) {
+            window.removeEventListener('cyso:render-settings', this.handleRenderSettingsChanged);
+        }
         this.props.vm.runtime.removeListener('QUESTION', this.questionListener);
     }
     questionListener (question) {

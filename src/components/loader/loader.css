@@ -38,49 +38,102 @@
     margin-top: -4px;
 }
 
+/* The three blocks slide in one after another, hold for a moment, then all fade back out together
+   so the cycle restarts without a visible jump. */
 .top-block {
-    animation: top-slide-in 1.5s ease infinite;
+    animation: block-top 1.8s cubic-bezier(0.33, 0, 0.15, 1) infinite;
 }
 
 .middle-block {
-    animation: middle-slide-in 1.5s ease infinite;
+    animation: block-middle 1.8s cubic-bezier(0.33, 0, 0.15, 1) infinite;
 }
 
 .bottom-block {
-    animation: bottom-slide-in 1.5s ease infinite;
+    animation: block-bottom 1.8s cubic-bezier(0.33, 0, 0.15, 1) infinite;
 }
 
 [dir="rtl"] .top-block {
-    animation: top-slide-in-rtl 1.5s ease infinite;
+    animation-name: block-top-rtl;
 }
 
 [dir="rtl"] .middle-block {
-    animation: middle-slide-in-rtl 1.5s ease infinite;
+    animation-name: block-middle-rtl;
 }
 
 [dir="rtl"] .bottom-block {
-    animation: bottom-slide-in-rtl 1.5s ease infinite;
+    animation-name: block-bottom-rtl;
 }
 
-@keyframes top-slide-in {
+/* Progress already communicates that something is happening, so don't animate for people who asked
+   for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .top-block,
+  .middle-block,
+  .bottom-block {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes block-top {
   0% {
     transform: translateY(50px);
     opacity: 0;
   }
 
-  33% {
+  14% {
     transform: translateY(0px);
     opacity: 1;
   }
+
+  /* hold */
+  78% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
 }
 
-@keyframes middle-slide-in {
+@keyframes block-middle {
   0% {
     transform: translateY(50px);
     opacity: 0;
   }
 
-  33% {
+  26% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+
+  /* hold */
+  78% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+
+@keyframes block-bottom {
+  0% {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+
+  52% {
     transform: translateY(50px);
     opacity: 0;
   }
@@ -89,48 +142,75 @@
     transform: translateY(0px);
     opacity: 1;
   }
-}
 
-@keyframes bottom-slide-in {
-  0% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-
-  100% {
+  /* hold */
+  78% {
     transform: translateY(0px);
     opacity: 1;
   }
-}
 
-@keyframes top-slide-in-rtl {
-  0% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  33% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
-  }
   100% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
+    transform: translateY(-14px);
+    opacity: 0;
   }
 }
 
-@keyframes middle-slide-in-rtl {
+@keyframes block-top-rtl {
   0% {
     transform: translateY(50px) scaleX(-1);
     opacity: 0;
   }
 
-  33% {
+  14% {
+    transform: translateY(0px) scaleX(-1);
+    opacity: 1;
+  }
+
+  78% {
+    transform: translateY(0px) scaleX(-1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-14px) scaleX(-1);
+    opacity: 0;
+  }
+}
+
+@keyframes block-middle-rtl {
+  0% {
+    transform: translateY(50px) scaleX(-1);
+    opacity: 0;
+  }
+
+  26% {
+    transform: translateY(50px) scaleX(-1);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateY(0px) scaleX(-1);
+    opacity: 1;
+  }
+
+  78% {
+    transform: translateY(0px) scaleX(-1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-14px) scaleX(-1);
+    opacity: 0;
+  }
+}
+
+@keyframes block-bottom-rtl {
+  0% {
+    transform: translateY(50px) scaleX(-1);
+    opacity: 0;
+  }
+
+  52% {
     transform: translateY(50px) scaleX(-1);
     opacity: 0;
   }
@@ -139,26 +219,15 @@
     transform: translateY(0px) scaleX(-1);
     opacity: 1;
   }
-  100% {
+
+  78% {
     transform: translateY(0px) scaleX(-1);
     opacity: 1;
   }
-}
-
-@keyframes bottom-slide-in-rtl {
-  0% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
-
-  66% {
-    transform: translateY(50px) scaleX(-1);
-    opacity: 0;
-  }
 
   100% {
-    transform: translateY(0px) scaleX(-1);
-    opacity: 1;
+    transform: translateY(-14px) scaleX(-1);
+    opacity: 0;
   }
 }
 

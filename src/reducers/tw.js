@@ -17,6 +17,7 @@ const SET_HAS_CLOUD_VARIABLES = 'tw/SET_HAS_CLOUD_VARIABLES';
 const SET_CLOUD_HOST = 'tw/SET_CLOUD_HOST';
 const SET_PLATFORM_MISMATCH_DETAILS = 'tw/SET_PLATFORM_MISMATCH_DETAILS';
 const SET_PROJECT_ERROR = 'tw/SET_PROJECT_ERROR';
+const SET_UPDATE_AVAILABLE_VERSION = 'tw/SET_UPDATE_AVAILABLE_VERSION';
 const SET_CYSO_CORE_ENABLED = 'tw/SET_CYSO_CORE_ENABLED';
 const SET_DEFAULT_PERMISSION = 'tw/SET_DEFAULT_PERMISSION';
 const SET_EXTENSION_PERMISSION = 'tw/SET_EXTENSION_PERMISSION';
@@ -59,6 +60,7 @@ export const initialState = {
     },
     projectError: null,
     cysoCoreEnabled: false,
+    updateAvailableVersion: '',
     defaults: {},
     extensionPermissions: {},
     loadedExtensions: []
@@ -152,6 +154,10 @@ const reducer = function (state, action) {
     case SET_CYSO_CORE_ENABLED:
         return Object.assign({}, state, {
             cysoCoreEnabled: action.cysoCoreEnabled
+        });
+    case SET_UPDATE_AVAILABLE_VERSION:
+        return Object.assign({}, state, {
+            updateAvailableVersion: action.updateAvailableVersion
         });
     case SET_DEFAULT_PERMISSION:
         return Object.assign({}, state, {
@@ -350,6 +356,13 @@ const setCYSOCoreEnabled = function (cysoCoreEnabled) {
     };
 };
 
+const setUpdateAvailableVersion = function (updateAvailableVersion) {
+    return {
+        type: SET_UPDATE_AVAILABLE_VERSION,
+        updateAvailableVersion
+    };
+};
+
 const setDefaultPermission = function (permissionType, setting) {
     return {
         type: SET_DEFAULT_PERMISSION,
@@ -409,6 +422,7 @@ export {
     setPlatformMismatchDetails,
     setProjectError,
     setCYSOCoreEnabled,
+    setUpdateAvailableVersion,
     setDefaultPermission,
     setExtensionPermission,
     registerExtensionPermissions,

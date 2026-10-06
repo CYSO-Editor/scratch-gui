@@ -4,10 +4,15 @@ export default async function ({ addon, console, msg }) {
   const getBlockCount = () => {
     let blockCount = 0;
     let scriptCount = 0;
-    let sprites = new Set(vm.runtime.targets.map((i) => i.sprite.blocks._blocks));
-    sprites.forEach((sprite, i) => {
-      scriptCount += Object.values(sprite).filter((o) => !o.parent).length; // Filter blocks that don't have a parent (meaning it's the top of a stack)
-      blockCount += Object.values(sprite).filter((o) => !o.shadow).length; // shadow blocks should be filtered out
+    const sprites = new Set(vm.runtime.targets.map((i) => i.sprite.blocks._blocks));
+    sprites.forEach((sprite) => {
+      const blocks = Object.values(sprite);
+      for (const block of blocks) {
+        // Filter blocks that don't have a parent (meaning it's the top of a stack)
+        if (!block.parent) scriptCount++;
+        // shadow blocks should be filtered out
+        if (!block.shadow) blockCount++;
+      }
     });
     return {
       blockCount,

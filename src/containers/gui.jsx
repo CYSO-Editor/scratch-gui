@@ -115,6 +115,7 @@ class GUI extends React.Component {
         return (
             <GUIComponent
                 loading={fetchingProject || isLoading || loadingStateVisible}
+                userInitiated={loadingStateVisible}
                 {...componentProps}
             >
                 {children}

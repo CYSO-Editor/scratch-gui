@@ -45,17 +45,29 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 'handleStartSelectingFileUpload',
                 'handleChange',
                 'onload',
+                'onerror',
                 'removeFileObjects'
             ]);
             // tw: We have multiple instances of this HOC alive at a time. This flag fixes issues that arise from that.
             this.expectingFileUploadFinish = false;
+            // tw: Only the most recent import may touch project state. Reading a
+            // large archive can outlast the user starting another load.
+            this.loadToken = 0;
         }
         componentDidUpdate (prevProps) {
             if (this.props.isLoadingUpload && !prevProps.isLoadingUpload && this.expectingFileUploadFinish) {
                 this.handleFinishedLoadingUpload(); // cue step 5 below
             }
+            if (!this.props.isLoadingUpload && prevProps.isLoadingUpload && this.expectingFileUploadFinish) {
+                // The upload was superseded or cancelled before the read began;
+                // drop the pending state so the next import starts clean.
+                this.expectingFileUploadFinish = false;
+                this.removeFileObjects();
+            }
         }
         componentWillUnmount () {
+            // Invalidate in-flight work so a late callback cannot dispatch.
+            this.loadToken++;
             this.removeFileObjects();
         }
         // step 1: this is where the upload process begins
@@ -72,6 +84,10 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             // create fileReader
             this.fileReader = new FileReader();
             this.fileReader.onload = this.onload;
+            // tw: Without this the loading screen never resolves when the read
+            // fails, e.g. the file was moved or deleted while being opened.
+            this.fileReader.onerror = this.onerror;
+            this.fileReader.onabort = this.onerror;
             // tw: Use FS API when available
             if (this.props.showOpenFilePicker) {
                 (async () => {
@@ -107,6 +123,12 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                             return;
                         }
                         log.error(err);
+                        // The project was never requested, so this is not an
+                        // invalid-project situation; just release the pending
+                        // state so the editor stays usable.
+                        this.expectingFileUploadFinish = false;
+                        this.removeFileObjects();
+                        this.props.cancelFileUpload(this.props.loadingState);
                     }
                 })();
             } else {
@@ -193,32 +215,52 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 6: attached as a handler on our FileReader object; called when
         // file upload raw data is available in the reader
         onload () {
-            if (this.fileReader) {
-                this.props.onLoadingStarted();
-                const filename = this.fileToUpload && this.fileToUpload.name;
-                let loadingSuccess = false;
-                // tw: stop when loading new project
-                this.props.vm.quit();
-                this.props.vm.loadProject(this.fileReader.result)
-                    .then(() => {
-                        if (filename) {
-                            const uploadedProjectTitle = this.getProjectTitleFromFilename(filename);
-                            this.props.onSetProjectTitle(uploadedProjectTitle);
-                        }
-                        this.props.vm.renderer.draw();
-                        loadingSuccess = true;
-                    })
-                    .catch(error => {
-                        log.error(error);
-                        this.props.onLoadingFailed(error);
-                    })
-                    .then(() => {
-                        this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
-                        // go back to step 7: whether project loading succeeded
-                        // or failed, reset file objects
-                        this.removeFileObjects();
-                    });
+            if (!this.fileReader) {
+                return;
             }
+            const token = ++this.loadToken;
+            const filename = this.fileToUpload && this.fileToUpload.name;
+            const data = this.fileReader.result;
+            // The reader is released now that the bytes are in hand; a later
+            // load must not be able to read them again.
+            this.removeFileObjects();
+
+            this.props.onLoadingStarted();
+            let loadingSuccess = false;
+            // tw: stop when loading new project
+            this.props.vm.quit();
+            this.props.vm.loadProject(data)
+                .then(() => {
+                    if (filename) {
+                        const uploadedProjectTitle = this.getProjectTitleFromFilename(filename);
+                        this.props.onSetProjectTitle(uploadedProjectTitle);
+                    }
+                    this.props.vm.renderer.draw();
+                    loadingSuccess = true;
+                })
+                .catch(error => {
+                    log.error(error);
+                    this.props.onLoadingFailed(error);
+                })
+                .then(() => {
+                    if (token !== this.loadToken) {
+                        // A newer import took over; its own callbacks own the
+                        // project state now.
+                        return;
+                    }
+                    this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
+                });
+        }
+        // step 6b: the file could not be read at all
+        onerror (event) {
+            const reason = event && event.target && event.target.error;
+            const error = new Error(
+                `Could not read the selected file${reason ? `: ${reason}` : '.'}`
+            );
+            log.error(error);
+            this.removeFileObjects();
+            this.props.onLoadingFailed(error);
+            this.props.onLoadingFinished(this.props.loadingState, false);
         }
         // step 7: remove the <input> element from the DOM and clear reader and
         // fileToUpload reference, so those objects can be garbage collected

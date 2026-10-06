@@ -126,6 +126,8 @@ const GUIComponent = props => {
         onCloseAccountNav,
         onClickAddonSettings,
         onClickDesktopSettings,
+        onClickUpdateNotice,
+        updateAvailableMessage,
         onClickNewWindow,
         onClickPackager,
         onLogOut,
@@ -164,6 +166,7 @@ const GUIComponent = props => {
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
+        userInitiated,
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
@@ -240,7 +243,8 @@ const GUIComponent = props => {
                 className={styles.pageWrapper}
                 dir={isRtl ? 'rtl' : 'ltr'}
                 style={{
-                    minWidth: 1024 + Math.max(0, customStageSize.width - 480),
+                    // min() 让最小宽度跟随窗口缩放，页面因此不会横向溢出。
+                    minWidth: `min(${1024 + Math.max(0, customStageSize.width - 480)}px, 100%)`,
                     minHeight: 640 + Math.max(0, customStageSize.height - 360)
                 }}
                 {...componentProps}
@@ -257,8 +261,8 @@ const GUIComponent = props => {
                         onShowPrivacyPolicy={onShowPrivacyPolicy}
                     />
                 ) : null}
-                <LoaderBridge vm={vm} />
-                <AuroraSplash active={loading} />
+                <LoaderBridge vm={vm} active={loading} />
+                <AuroraSplash active={loading} userInitiated={userInitiated} />
                 {isCreating ? (
                     <Loader
                         isFullScreen
@@ -325,6 +329,8 @@ const GUIComponent = props => {
                     onClickAccountNav={onClickAccountNav}
                     onClickAddonSettings={onClickAddonSettings}
                     onClickDesktopSettings={onClickDesktopSettings}
+                    onClickUpdateNotice={onClickUpdateNotice}
+                    updateAvailableMessage={updateAvailableMessage}
                     onClickNewWindow={onClickNewWindow}
                     onClickPackager={onClickPackager}
                     onClickLogo={onClickLogo}
@@ -522,6 +528,8 @@ GUIComponent.propTypes = {
     onClickAccountNav: PropTypes.func,
     onClickAddonSettings: PropTypes.func,
     onClickDesktopSettings: PropTypes.func,
+    onClickUpdateNotice: PropTypes.func,
+    updateAvailableMessage: PropTypes.string,
     onClickNewWindow: PropTypes.func,
     onClickPackager: PropTypes.func,
     onClickLogo: PropTypes.func,
