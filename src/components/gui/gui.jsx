@@ -243,7 +243,6 @@ const GUIComponent = props => {
                 className={styles.pageWrapper}
                 dir={isRtl ? 'rtl' : 'ltr'}
                 style={{
-                    // min() 让最小宽度跟随窗口缩放，页面因此不会横向溢出。
                     minWidth: `min(${1024 + Math.max(0, customStageSize.width - 480)}px, 100%)`,
                     minHeight: 640 + Math.max(0, customStageSize.height - 360)
                 }}

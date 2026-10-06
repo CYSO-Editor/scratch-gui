@@ -14,12 +14,8 @@ const STATUS_DOWNLOAD = '正在下载素材 (';
 const STATUS_READY = '即将完成…';
 
 /**
- * The progress bar is driven by a target ("goal") that stages raise as loading advances, so the
- * displayed value eases toward it instead of jumping. Percentages below are the bar's own scale,
- * not wall-clock estimates: each one marks the point where that stage is known to have begun.
- *
- * gui.html runs the same ladder for the phase before React mounts and hands the value over through
- * the cyso:load-handoff event, so the bar keeps climbing continuously across the boundary.
+ * 各阶段的目标百分比。进度条向 goal 缓动逼近，百分比只表示阶段而非实际耗时。
+ * gui.html 在 React 挂载前跑同一套阶段并交接过来，因此交接点两边都连续。
  */
 const STAGE_GOAL = {
   init: 10,
@@ -114,16 +110,15 @@ class AuroraSplash extends React.Component {
     window.addEventListener('cyso:load-progress', this.onProgress);
     window.addEventListener('cyso:load-phase', this.onPhase);
     window.addEventListener('cyso:load-done', this.onDone);
+    // 交接事件可能早于挂载被丢弃，gui.html 会把值留在 window 上。
     if (window.cysoBootDone) {
-      // gui.html 里的加载界面已经退场，这里必须立刻顶上，否则会露出还没构建完的主界面。
+      this.adoptHandoff(window.cysoBootHandoff);
       this.ensureVisible();
-      this.goal = Math.max(this.goal, STAGE_GOAL.handoff);
       this.armWatchdog();
       this.startLoop();
     } else if (this.props.active && this.shouldShow()) {
       this.show();
     }
-    this.reportReady();
   }
 
   componentWillUnmount () {
@@ -209,6 +204,8 @@ class AuroraSplash extends React.Component {
     if (!this.state.visible && this.mounted) {
       this.setState({visible: true});
     }
+    // 只有本组件确实要显示时才能让 gui.html 的加载界面退场，否则中间会露出未构建完的主界面。
+    this.reportReady();
   }
 
   applyTheme () {
@@ -301,15 +298,23 @@ class AuroraSplash extends React.Component {
     }, EXIT_FADE_MS);
   }
 
-  onHandoff (e) {
-    if (this.hasCompleted || this.pendingFinish) return;
-    this.ensureVisible();
-    const detail = (e && e.detail) || {};
-    this.handoffProgress = Math.max(this.handoffProgress, Number(detail.progress) || STAGE_GOAL.handoff);
+  adoptHandoff (detail) {
+    this.handoffProgress = Math.max(
+      this.handoffProgress,
+      Number(detail && detail.progress) || STAGE_GOAL.handoff
+    );
     this.bootPending = true;
     this.progress = Math.max(this.progress, this.handoffProgress);
     this.goal = Math.max(this.goal, STAGE_GOAL.handoff);
-    this.setStatus(detail.status || STATUS_INIT);
+    if (detail && detail.status) {
+      this.setStatus(detail.status);
+    }
+  }
+
+  onHandoff (e) {
+    if (this.hasCompleted || this.pendingFinish) return;
+    this.ensureVisible();
+    this.adoptHandoff((e && e.detail) || {});
     this.armWatchdog();
     this.startLoop();
   }
@@ -361,11 +366,8 @@ class AuroraSplash extends React.Component {
   }
 
   onDone () {
-    if (!this.hasCompleted) {
-      this.hasCompleted = true;
-      window.dispatchEvent(new CustomEvent('cyso:load-complete'));
-    }
     if (!this.state.visible) return;
+    this.hasCompleted = true;
     if (this.watchdog) {
       clearTimeout(this.watchdog);
       this.watchdog = 0;
