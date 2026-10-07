@@ -63,12 +63,22 @@ const base = {
     },
     resolve: {
         symlinks: false,
+        modules: [
+            'node_modules',
+            path.resolve(__dirname, 'node_modules')
+        ],
         alias: {
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
             // workspace.enableProcedureReturns 等新 API 缺失。
             'scratch-blocks$': path.resolve(__dirname, '../scratch-blocks/shim/vertical.js')
         }
+    },
+    resolveLoader: {
+        modules: [
+            'node_modules',
+            path.resolve(__dirname, 'node_modules')
+        ]
     },
     module: {
         rules: [{

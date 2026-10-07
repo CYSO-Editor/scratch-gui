@@ -658,6 +658,10 @@ class TWSecurityManagerComponent extends React.Component {
                 configurable: true
             });
         } catch (e) {
+            // 包装失败意味着扩展会绕过 UI 的授权确认框直接调用底层接口。
+            // 主进程的 gatePermission 仍会拦截，但用户将完全不知情，
+            // 因此这里必须留下痕迹，不能静默吞掉。
+            console.error('Failed to install EditorPreload permission wrappers:', e);
         }
     }
 

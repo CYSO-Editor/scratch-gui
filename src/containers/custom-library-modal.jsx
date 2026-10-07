@@ -11,6 +11,8 @@ import {
 
 import CysoDialog from '../components/cyso-dialog/cyso-dialog.jsx';
 
+const JS_PLACEHOLDER = 'const res = await fetch(libraryUrl);\nconst data = await res.json();\nreturn (data.extensions || []).map(it => ({\n  id: it.ext_id,\n  name: it.title,\n  description: it.desc,\n  author: it.creator\n}));';
+
 const messages = defineMessages({
     title: {
         defaultMessage: '自定义扩展库管理',
@@ -141,11 +143,6 @@ const messages = defineMessages({
         defaultMessage: '自定义 JS 代码（会收到 fetch 与 libraryUrl 两个参数，需 return 标准结构）',
         description: 'Custom JS code label',
         id: 'tw.customLibrary.jsCode'
-    },
-    jsPlaceholder: {
-        defaultMessage: 'const res = await fetch(libraryUrl);\nconst data = await res.json();\nreturn (data.extensions || []).map(it => ({\n  id: it.ext_id,\n  name: it.title,\n  description: it.desc,\n  author: it.creator\n}));',
-        description: 'JS code placeholder',
-        id: 'tw.customLibrary.jsPlaceholder'
     },
     standardSchema: {
         defaultMessage: '标准 JSON 结构（自定义 JS 需返回此结构）',
@@ -639,7 +636,7 @@ const CustomLibraryModal = ({intl, visible, onClose, onChanged}) => {
                                 <div style={labelStyle}>{intl.formatMessage(messages.jsCode)}</div>
                                 <textarea
                                     value={form.code || ''}
-                                    placeholder={intl.formatMessage(messages.jsPlaceholder)}
+                                    placeholder={JS_PLACEHOLDER}
                                     onChange={e => setField('code', e.target.value)}
                                     style={{...inputStyle, minHeight: 180, fontFamily: 'monospace', fontSize: 12, resize: 'vertical'}}
                                 />

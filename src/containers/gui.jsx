@@ -67,8 +67,12 @@ class GUI extends React.Component {
                     if (version) this.props.onSetUpdateAvailableVersion(version);
                 })
                 .catch(() => {});
-            if (EditorPreload.onUpdateAvailable) {
-                this.unsubscribeUpdateAvailable = EditorPreload.onUpdateAvailable((event, version) => {
+            // preload 暴露的订阅方法名为 onUpdateAvailableChanged，它只回传版本号；
+            // 兼容可能存在的别名写法。回调不接收 ipc event，版本号由 preload 规范化后传入。
+            const subscribeUpdateAvailable = EditorPreload.onUpdateAvailableChanged ||
+                EditorPreload.onUpdateAvailable;
+            if (subscribeUpdateAvailable) {
+                this.unsubscribeUpdateAvailable = subscribeUpdateAvailable(version => {
                     this.props.onSetUpdateAvailableVersion(version || '');
                 });
             }
