@@ -5,9 +5,6 @@
 /node_modules
 npm-*
 
-# Dependencies of vendored packages are installed by npm, not committed
-local-deps/*/node_modules/
-
 # Testing
 /.nyc_output
 /coverage

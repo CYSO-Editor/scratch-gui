@@ -17,6 +17,9 @@ const initialState = {
     windows: []
 };
 
+// gui.js imports this by name to seed its own initial state.
+const workspaceWindowsInitialState = initialState;
+
 const maxZIndex = windows => windows.reduce((max, windowRect) => Math.max(max, windowRect.zIndex || 0), 0);
 
 const nextZIndex = windows => maxZIndex(windows) + 1;
@@ -289,6 +292,7 @@ const pruneWorkspaceWindows = windows => ({
 });
 
 export {
+    workspaceWindowsInitialState,
     createWorkspaceWindow,
     closeWorkspaceWindow,
     addTargetToWindow,
