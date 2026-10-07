@@ -528,6 +528,7 @@ GUIComponent.propTypes = {
     onClickAddonSettings: PropTypes.func,
     onClickDesktopSettings: PropTypes.func,
     onClickUpdateNotice: PropTypes.func,
+    onSetUpdateAvailableVersion: PropTypes.func,
     updateAvailableMessage: PropTypes.string,
     onClickNewWindow: PropTypes.func,
     onClickPackager: PropTypes.func,

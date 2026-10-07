@@ -38,6 +38,8 @@ import cloudManagerHOC from '../lib/cloud-manager-hoc.jsx';
 
 import GUIComponent from '../components/gui/gui.jsx';
 import {setIsScratchDesktop} from '../lib/isScratchDesktop.js';
+import {setUpdateAvailableVersion} from '../reducers/tw.js';
+import {cysoMessage} from '../lib/cyso-l10n.js';
 import TWFullScreenResizerHOC from '../lib/tw-fullscreen-resizer-hoc.jsx';
 import TWThemeManagerHOC from './tw-theme-manager-hoc.jsx';
 
@@ -59,6 +61,22 @@ class GUI extends React.Component {
         this.props.onStorageInit(storage);
         this.props.onVmInit(this.props.vm);
         setProjectIdMetadata(this.props.projectId);
+        if (typeof EditorPreload !== 'undefined' && EditorPreload.getUpdateAvailableVersion) {
+            EditorPreload.getUpdateAvailableVersion()
+                .then(version => {
+                    if (version) this.props.onSetUpdateAvailableVersion(version);
+                })
+                .catch(() => {});
+            // preload 暴露的订阅方法名为 onUpdateAvailableChanged，它只回传版本号；
+            // 兼容可能存在的别名写法。回调不接收 ipc event，版本号由 preload 规范化后传入。
+            const subscribeUpdateAvailable = EditorPreload.onUpdateAvailableChanged ||
+                EditorPreload.onUpdateAvailable;
+            if (subscribeUpdateAvailable) {
+                this.unsubscribeUpdateAvailable = subscribeUpdateAvailable(version => {
+                    this.props.onSetUpdateAvailableVersion(version || '');
+                });
+            }
+        }
     }
     componentDidUpdate (prevProps) {
         if (this.props.projectId !== prevProps.projectId) {
@@ -86,6 +104,12 @@ class GUI extends React.Component {
             this.props.onProjectLoaded();
         }
 
+    }
+    componentWillUnmount () {
+        if (this.unsubscribeUpdateAvailable) {
+            this.unsubscribeUpdateAvailable();
+            this.unsubscribeUpdateAvailable = null;
+        }
     }
     render () {
         if (this.props.isError) {
@@ -141,6 +165,7 @@ GUI.propTypes = {
     loadingStateVisible: PropTypes.bool,
     onProjectLoaded: PropTypes.func,
     onSeeCommunity: PropTypes.func,
+    onSetUpdateAvailableVersion: PropTypes.func,
     onStorageInit: PropTypes.func,
     onUpdateProjectId: PropTypes.func,
     onVmInit: PropTypes.func,
@@ -159,8 +184,9 @@ GUI.defaultProps = {
     onVmInit: (/* vm */) => {}
 };
 
-const mapStateToProps = state => {
+const mapStateToProps = (state, ownProps) => {
     const loadingState = state.scratchGui.projectState.loadingState;
+    const updateAvailableVersion = state.scratchGui.tw.updateAvailableVersion;
     return {
         activeTabIndex: state.scratchGui.editorTab.activeTabIndex,
         alertsVisible: state.scratchGui.alerts.visible,
@@ -193,12 +219,20 @@ const mapStateToProps = state => {
         fontsModalVisible: state.scratchGui.modals.fontsModal,
         unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
+        updateAvailableMessage: updateAvailableVersion ?
+            cysoMessage(ownProps.intl, 'updateAvailable').replace('{version}', updateAvailableVersion) : null,
         vm: state.scratchGui.vm
     };
 };
 
 const mapDispatchToProps = dispatch => ({
     dispatch,
+    onClickUpdateNotice: () => {
+        if (typeof EditorPreload !== 'undefined' && EditorPreload.openUpdateWindow) {
+            EditorPreload.openUpdateWindow();
+        }
+    },
+    onSetUpdateAvailableVersion: version => dispatch(setUpdateAvailableVersion(version)),
     onExtensionButtonClick: () => dispatch(openExtensionLibrary()),
     onActivateTab: tab => dispatch(activateTab(tab)),
     onActivateCostumesTab: () => dispatch(activateTab(COSTUMES_TAB_INDEX)),

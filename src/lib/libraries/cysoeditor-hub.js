@@ -161,7 +161,8 @@ const downloadAndCacheExtension = async (extensionId, url) => {
         url: url,
         size: content.byteLength,
         type: response.headers.get('content-type') || 'application/javascript',
-        remoteLastModified: response.headers.get('last-modified') || null
+        remoteLastModified: response.headers.get('last-modified') || null,
+        origin: 'hub'
     };
 
     await cacheExtensionFile(extensionId, content, metadata);
@@ -190,7 +191,10 @@ const checkCachedFileForUpdate = async (extensionId, remoteUrl) => {
                 const remoteDate = new Date(lastModified);
                 const cachedDate = cachedFile.metadata.remoteLastModified ?
                     new Date(cachedFile.metadata.remoteLastModified) : null;
-                if (!cachedDate || remoteDate.getTime() !== cachedDate.getTime()) {
+                if (!cachedDate) {
+                    return { needsUpdate: false, reason: 'up_to_date' };
+                }
+                if (remoteDate.getTime() !== cachedDate.getTime()) {
                     return { needsUpdate: true, reason: 'remote_newer' };
                 }
             }
@@ -381,7 +385,7 @@ const syncCache = async extensions => {
     try {
         const allFiles = await getAllCachedExtensions();
         for (const f of allFiles) {
-            if (!validIds.has(f.id)) {
+            if (!validIds.has(f.id) && f.metadata && f.metadata.origin === 'hub') {
                 await deleteCachedExtensionFile(f.id);
                 stats.removed++;
             }
@@ -787,7 +791,10 @@ const mapStandardToLibraryItems = (standardArray, sourceConfig) => {
                 fullDescription: description,
                 sourceName: sourceName
             };
-        });
+        })
+        .filter(item =>
+            (item.extensionURL && item.extensionURL !== '') ||
+            (item.extensionURLs && item.extensionURLs.length > 0));
 };
 
 const fetchAndParseLibrary = async (libConfig, iconFallback, locale) => {

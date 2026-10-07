@@ -658,6 +658,10 @@ class TWSecurityManagerComponent extends React.Component {
                 configurable: true
             });
         } catch (e) {
+            // 包装失败意味着扩展会绕过 UI 的授权确认框直接调用底层接口。
+            // 主进程的 gatePermission 仍会拦截，但用户将完全不知情，
+            // 因此这里必须留下痕迹，不能静默吞掉。
+            console.error('Failed to install EditorPreload permission wrappers:', e);
         }
     }
 
@@ -698,9 +702,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canLoadExtensionFromProject (url) {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         if (isTrustedExtension(url)) {
             return true;
         }
@@ -740,11 +741,6 @@ class TWSecurityManagerComponent extends React.Component {
     
     
     async batchLoadExtensions (extensionUrls) {
-        if (this.props.cysoCoreEnabled) {
-            return extensionUrls.map(() => true);
-        }
-
-        
         const candidates = extensionUrls
             .map((url, index) => ({url, index}))
             .filter(({url}) => !isTrustedExtension(url));
@@ -868,9 +864,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (isAlwaysTrustedForFetching(parsed)) {
             return true;
@@ -892,9 +885,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.OpenWindow, {url});
@@ -904,18 +894,12 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.Redirect, {url});
     }
 
     async canRecordAudio () {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (!allowedAudio) {
             const {showModal} = await this.acquireModalLock();
@@ -925,9 +909,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordVideo () {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (!allowedVideo) {
             const {showModal} = await this.acquireModalLock();
@@ -937,9 +918,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canReadClipboard () {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (!allowedReadClipboard) {
             const {showModal} = await this.acquireModalLock();
@@ -949,9 +927,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canNotify () {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (!allowedNotify) {
             const {showModal} = await this.acquireModalLock();
@@ -961,9 +936,6 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canGeolocate () {
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         if (!allowedGeolocation) {
             const {showModal} = await this.acquireModalLock();
@@ -976,9 +948,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         const host = (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.host : null;
         const {showModal, releaseLock} = await this.acquireModalLock();
@@ -995,9 +964,6 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        if (this.props.cysoCoreEnabled && !getCurrentExtensionId()) {
-            return true;
-        }
         
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.Download, {url, name});

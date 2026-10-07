@@ -186,6 +186,39 @@ const forgetTargetBlocks = (target, blockId) => {
     }
 };
 
+const collectVariableIds = workspace => {
+    if (!workspace || typeof workspace.getAllVariables !== 'function') return null;
+    try {
+        const ids = new Set();
+        const variables = workspace.getAllVariables() || [];
+        variables.forEach(variable => {
+            if (variable && variable.getId) ids.add(variable.getId());
+        });
+        return ids;
+    } catch (e) {
+        return null;
+    }
+};
+
+const emitCreatedVariableEvents = (Blocks, workspace, beforeIds) => {
+    if (!workspace || !beforeIds || typeof workspace.getAllVariables !== 'function') return;
+    if (!Blocks || !Blocks.Events || !Blocks.Events.VarCreate || !Blocks.Events.isEnabled()) return;
+    let variables = [];
+    try {
+        variables = workspace.getAllVariables() || [];
+    } catch (e) {
+        return;
+    }
+    variables.forEach(variable => {
+        if (!variable || !variable.getId || beforeIds.has(variable.getId())) return;
+        try {
+            Blocks.Events.fire(new Blocks.Events.VarCreate(variable));
+        } catch (e) {
+            return;
+        }
+    });
+};
+
 const moveBlockToWorkspace = (Blocks, options) => {
     const {
         sourceEntry,
@@ -215,6 +248,7 @@ const moveBlockToWorkspace = (Blocks, options) => {
     if (!xmlBlock) return false;
     stripBlockIds(xmlBlock);
     const subtreeIds = collectSubtreeIds(sourceBlock);
+    const variableIdsBefore = collectVariableIds(targetEntry.workspace);
     let created = null;
     try {
         created = Blocks.Xml.domToBlock(xmlBlock, targetEntry.workspace);
@@ -222,6 +256,7 @@ const moveBlockToWorkspace = (Blocks, options) => {
         created = null;
     }
     if (!created) return false;
+    emitCreatedVariableEvents(Blocks, targetEntry.workspace, variableIdsBefore);
     try {
         placeBlock(Blocks, created, screenPoint);
     } catch (e) {

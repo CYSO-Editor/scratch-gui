@@ -125,10 +125,18 @@ Object.keys(PERMISSION_GROUPS).forEach(key => {
 
 const STORAGE_KEY = 'cyso-core-permissions';
 
-const adminToken = (typeof EditorPreload !== 'undefined' && typeof EditorPreload.claimPermissionAdmin === 'function') ?
-    EditorPreload.claimPermissionAdmin() : null;
+let adminToken = null;
+let adminTokenRequested = false;
 
-const getAdminToken = () => adminToken;
+const getAdminToken = () => {
+    if (!adminTokenRequested) {
+        adminTokenRequested = true;
+        if (typeof EditorPreload !== 'undefined' && typeof EditorPreload.claimPermissionAdmin === 'function') {
+            adminToken = EditorPreload.claimPermissionAdmin();
+        }
+    }
+    return adminToken;
+};
 
 const loadAll = () => {
     try {

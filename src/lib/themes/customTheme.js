@@ -63,6 +63,7 @@ const save = custom => {
             !custom.performanceMode &&
             custom.toolbarBackground.value === '' &&
             !custom.toolbarTransparent &&
+            custom.accentCustom === '' &&
             !custom.darkMode;
         if (empty) {
             localStorage.removeItem(STORAGE_KEY);
