@@ -4,7 +4,7 @@ class AudioBufferPlayer {
     constructor (samples, sampleRate) {
         this.audioContext = new SharedAudioContext();
         const length = Math.max(samples.length, 1);
-        const rate = Math.max(sampleRate, 1);
+        const rate = (sampleRate >= 8000 && sampleRate <= 96000) ? sampleRate : this.audioContext.sampleRate;
         this.buffer = this.audioContext.createBuffer(1, length, rate);
         this.buffer.getChannelData(0).set(samples);
         this.source = null;

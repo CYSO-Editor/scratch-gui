@@ -49,7 +49,10 @@ class WorkspaceWindows extends React.Component {
         }
         const editing = this.props.editingTarget;
         if (!editing) return;
-        if (claimedNow.has(editing) && !claimedPrev.has(editing)) {
+        if (claimedNow.has(editing)) {
+            const windowNewlyClaimed = !claimedPrev.has(editing);
+            const mainMovedOntoClaimed = prevProps.editingTarget !== editing;
+            if (!windowNewlyClaimed && !mainMovedOntoClaimed) return;
             const runtime = this.props.vm && this.props.vm.runtime;
             const alt = runtime && runtime.targets.find(t =>
                 t.isOriginal && !claimedNow.has(t.id));

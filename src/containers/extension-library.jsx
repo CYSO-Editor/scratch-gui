@@ -690,10 +690,12 @@ class ExtensionLibrary extends React.PureComponent {
             window.vm = vmInstance;
             window.runtime = vmInstance.runtime;
             const blocksInstance = LazyScratchBlocks.get();
-            window.ScratchBlocks = blocksInstance;
-            window.Blockly = blocksInstance;
-            if (vmInstance.runtime) {
-                vmInstance.runtime.scratchBlocks = blocksInstance;
+            if (blocksInstance) {
+                window.ScratchBlocks = blocksInstance;
+                window.Blockly = blocksInstance;
+                if (vmInstance.runtime) {
+                    vmInstance.runtime.scratchBlocks = blocksInstance;
+                }
             }
         }
 
@@ -804,6 +806,9 @@ class ExtensionLibrary extends React.PureComponent {
             .catch(err => {
                 log.error('getCachedExtensionFile failed, falling back to network:', err);
                 return loadFromNetwork();
+            })
+            .finally(() => {
+                this._forceUnsandboxedForDataUrl = false;
             });
     }
 

@@ -14,6 +14,7 @@ const MESSAGES = {
     restore: {zh: '还原', en: 'Restore'},
     stage: {zh: '舞台', en: 'Stage'},
     focusHint: {zh: '当前工作区', en: 'Focused workspace'},
+    updateAvailable: {zh: '新版本 {version} 可用，点击查看', en: 'New version {version} available, click to view'},
     shortcutHint: {
         zh: 'Ctrl+W：关闭已聚焦的工作区；未聚焦时则为当前角色新建 · 双击标题栏最大化',
         en: 'Ctrl+W closes the focused workspace, or opens one for the current sprite · double-click the title bar to maximize'

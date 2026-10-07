@@ -214,13 +214,13 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 6: attached as a handler on our FileReader object; called when
         // file upload raw data is available in the reader
-        onload () {
+        onload (event) {
             if (!this.fileReader) {
                 return;
             }
             const token = ++this.loadToken;
             const filename = this.fileToUpload && this.fileToUpload.name;
-            const data = this.fileReader.result;
+            const data = event.target.result;
             // The reader is released now that the bytes are in hand; a later
             // load must not be able to read them again.
             this.removeFileObjects();

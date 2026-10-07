@@ -253,7 +253,7 @@ class WorkspaceWindow extends React.Component {
             return null;
         }
     }
-    loadBlocksForTarget (targetId) {
+    loadBlocksForTarget (targetId, preserveViewport) {
         if (!this.workspace) return;
         const xmlString = this.props.vm.getBlocksXMLForTarget(targetId);
         if (!xmlString) return;
@@ -264,7 +264,16 @@ class WorkspaceWindow extends React.Component {
         if (this.currentListener) {
             this.workspace.removeChangeListener(this.currentListener);
         }
-        this.currentListener = this.props.vm.blockListenerForTarget(targetId);
+        const savedMetrics = preserveViewport ? {
+            scrollX: this.workspace.scrollX,
+            scrollY: this.workspace.scrollY,
+            scale: this.workspace.scale
+        } : null;
+        const innerListener = this.props.vm.blockListenerForTarget(targetId);
+        this.currentListener = event => {
+            this.selfEdited = true;
+            innerListener(event);
+        };
         const dom = this.ScratchBlocks.Xml.textToDom(xmlString);
         try {
             this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
@@ -273,6 +282,13 @@ class WorkspaceWindow extends React.Component {
         this.workspace.addChangeListener(this.currentListener);
         this.workspace.clearUndo();
         this.resizeWorkspace();
+        if (savedMetrics) {
+            this.workspace.scrollX = savedMetrics.scrollX;
+            this.workspace.scrollY = savedMetrics.scrollY;
+            this.workspace.scale = savedMetrics.scale;
+            this.workspace.resize();
+        }
+        this.selfEdited = false;
         this.lastLoadedXml = xmlString;
         this.lastLoadedToolbox = toolboxXML;
     }
@@ -289,9 +305,14 @@ class WorkspaceWindow extends React.Component {
         if (!targetId) return;
         const xmlString = this.props.vm.getBlocksXMLForTarget(targetId);
         if (xmlString !== this.lastLoadedXml) {
-            this.loadBlocksForTarget(targetId);
-            return;
+            if (this.selfEdited) {
+                this.lastLoadedXml = xmlString;
+            } else {
+                this.loadBlocksForTarget(targetId, true);
+                return;
+            }
         }
+        this.selfEdited = false;
         const toolboxXML = this.getToolboxXML(targetId);
         if (toolboxXML && this.workspace.toolbox_ && toolboxXML !== this.lastLoadedToolbox) {
             this.workspace.updateToolbox(toolboxXML);
