@@ -31,6 +31,18 @@ class ListMonitor extends React.Component {
         };
     }
 
+    componentWillReceiveProps (nextProps) {
+        const updates = {};
+        if (nextProps.width && nextProps.width !== this.state.width) {
+            updates.width = nextProps.width;
+        }
+        if (nextProps.height && nextProps.height !== this.state.height) {
+            updates.height = nextProps.height;
+        }
+        if (Object.keys(updates).length > 0) {
+            this.setState(updates);
+        }
+    }
     handleActivate (index) {
         // Do nothing if activating the currently active item
         if (this.state.activeIndex === index) {
@@ -50,8 +62,10 @@ class ListMonitor extends React.Component {
             if (this.state.inputDidChange) {
                 const {vm, targetId, id: variableId} = this.props;
                 const newListValue = getVariableValue(vm, targetId, variableId);
-                newListValue[this.state.activeIndex] = this.state.activeValue;
-                setVariableValue(vm, targetId, variableId, newListValue);
+                if (this.state.activeIndex >= 0 && this.state.activeIndex < newListValue.length) {
+                    newListValue[this.state.activeIndex] = this.state.activeValue;
+                    setVariableValue(vm, targetId, variableId, newListValue);
+                }
             }
 
             this.setState({
@@ -84,7 +98,7 @@ class ListMonitor extends React.Component {
             const newIndex = this.wrapListIndex(previouslyActiveIndex + navigateDirection, this.props.value.length);
             this.setState({
                 activeIndex: newIndex,
-                activeValue: safeStringify(this.props.value[newIndex]),
+                activeValue: newIndex === null ? null : safeStringify(this.props.value[newIndex]),
                 inputDidChange: false
             });
             e.preventDefault(); // Stop default tab behavior, handled by this state change
@@ -121,10 +135,12 @@ class ListMonitor extends React.Component {
         const newListValue = listValue.slice(0, this.state.activeIndex)
             .concat(listValue.slice(this.state.activeIndex + 1));
         setVariableValue(vm, targetId, variableId, newListValue);
-        const newActiveIndex = Math.min(newListValue.length - 1, this.state.activeIndex);
+        const newActiveIndex = newListValue.length > 0 ?
+            Math.max(0, Math.min(newListValue.length - 1, this.state.activeIndex)) :
+            null;
         this.setState({
             activeIndex: newActiveIndex,
-            activeValue: safeStringify(newListValue[newActiveIndex]),
+            activeValue: newActiveIndex === null ? null : safeStringify(newListValue[newActiveIndex]),
             inputDidChange: false
         });
     }
@@ -141,15 +157,24 @@ class ListMonitor extends React.Component {
         });
     }
 
+    getResizeScale (handle) {
+        if (!handle || !handle.offsetWidth) return 1;
+        const rect = typeof handle.getBoundingClientRect === 'function' ?
+            handle.getBoundingClientRect() :
+            null;
+        if (!rect || !rect.width) return 1;
+        return rect.width / handle.offsetWidth;
+    }
     handleResizeMouseDown (e) {
         this.initialPosition = getEventXY(e);
         this.initialWidth = this.state.width;
         this.initialHeight = this.state.height;
+        this.resizeScale = this.getResizeScale(e.currentTarget);
 
         const onMouseMove = ev => {
             const newPosition = getEventXY(ev);
-            const dx = newPosition.x - this.initialPosition.x;
-            const dy = newPosition.y - this.initialPosition.y;
+            const dx = (newPosition.x - this.initialPosition.x) / this.resizeScale;
+            const dy = (newPosition.y - this.initialPosition.y) / this.resizeScale;
             this.setState({
                 width: Math.max(Math.min(this.initialWidth + dx, this.props.customStageSize.width), 100),
                 height: Math.max(Math.min(this.initialHeight + dy, this.props.customStageSize.height), 60)
@@ -173,6 +198,7 @@ class ListMonitor extends React.Component {
     }
 
     wrapListIndex (index, length) {
+        if (!length) return null;
         return (index + length) % length;
     }
 

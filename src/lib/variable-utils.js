@@ -4,11 +4,13 @@ const getVariable = (vm, targetId, variableId) => {
     const target = targetId ?
         vm.runtime.getTargetById(targetId) :
         vm.runtime.getTargetForStage();
+    if (!target) return undefined;
     return target.variables[variableId];
 };
 
 const getVariableValue = (vm, targetId, variableId) => {
     const variable = getVariable(vm, targetId, variableId);
+    if (!variable) return [];
     // If array, return a new copy for mutating, ensuring that updates stay immutable.
     if (variable.value instanceof Array) return variable.value.slice();
     return variable.value;
@@ -16,6 +18,7 @@ const getVariableValue = (vm, targetId, variableId) => {
 
 const setVariableValue = (vm, targetId, variableId, value) => {
     const variable = getVariable(vm, targetId, variableId);
+    if (!variable) return;
     variable.value = value;
     if (variable.isCloud) {
         vm.runtime.ioDevices.cloud.requestUpdateVariable(variable.name, variable.value);

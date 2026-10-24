@@ -26,6 +26,9 @@ const availableModes = opcode => (
     })
 );
 
+const DEFAULT_MONITOR_WIDTH = 100;
+const DEFAULT_MONITOR_HEIGHT = 25;
+
 const messages = defineMessages({
     columnPrompt: {
         defaultMessage: 'Which column should be used (1-{numberOfColumns})?',
@@ -59,6 +62,8 @@ class Monitor extends React.Component {
         let rect;
 
         const isNum = num => typeof num === 'number' && !isNaN(num);
+        const width = this.element.offsetWidth || DEFAULT_MONITOR_WIDTH;
+        const height = this.element.offsetHeight || DEFAULT_MONITOR_HEIGHT;
 
         // Load the VM provided position if not loaded already
         // If a monitor has numbers for the x and y positions, load the saved position.
@@ -67,12 +72,13 @@ class Monitor extends React.Component {
             !this.props.monitorLayout.savedMonitorPositions[this.props.id]) {
             rect = {
                 upperStart: {x: this.props.x, y: this.props.y},
-                lowerEnd: {x: this.props.x + this.element.offsetWidth, y: this.props.y + this.element.offsetHeight}
+                lowerEnd: {x: this.props.x + width, y: this.props.y + height}
             };
             this.props.addMonitorRect(this.props.id, rect, true /* savePosition */);
         } else { // Newly created user monitor
             rect = getInitialPosition(
-                this.props.monitorLayout, this.props.id, this.element.offsetWidth, this.element.offsetHeight);
+                this.props.monitorLayout, this.props.id, width, height,
+                this.props.customStageSize.width, this.props.customStageSize.height);
             this.props.addMonitorRect(this.props.id, rect);
             this.props.vm.runtime.requestUpdateMonitor({
                 id: this.props.id,
@@ -107,9 +113,18 @@ class Monitor extends React.Component {
     componentWillUnmount () {
         this.props.removeMonitorRect(this.props.id);
     }
+    getElementScale () {
+        if (!this.element || !this.element.offsetWidth) return 1;
+        const rect = typeof this.element.getBoundingClientRect === 'function' ?
+            this.element.getBoundingClientRect() :
+            null;
+        if (!rect || !rect.width) return 1;
+        return rect.width / this.element.offsetWidth;
+    }
     handleDragEnd (e, {x, y}) {
-        const newX = parseInt(this.element.style.left, 10) + x;
-        const newY = parseInt(this.element.style.top, 10) + y;
+        const scale = this.getElementScale();
+        const newX = (parseInt(this.element.style.left, 10) || 0) + (x / scale);
+        const newY = (parseInt(this.element.style.top, 10) || 0) + (y / scale);
         this.props.onDragEnd(
             this.props.id,
             newX,
@@ -176,6 +191,7 @@ class Monitor extends React.Component {
     }
     handleImport () {
         importCSV().then(async ({rows, text}) => {
+            if (!rows.length) return;
             const numberOfColumns = rows[0].length;
             let columnNumber = 1;
             if (numberOfColumns > 1) {
@@ -197,6 +213,7 @@ class Monitor extends React.Component {
     handleExport () {
         const {vm, targetId, id: variableId} = this.props;
         const variable = getVariable(vm, targetId, variableId);
+        if (!variable || !Array.isArray(variable.value)) return;
         const text = variable.value.join('\r\n');
         const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
         downloadBlob(`${variable.name}.txt`, blob);
@@ -244,6 +261,10 @@ class Monitor extends React.Component {
 
 Monitor.propTypes = {
     addMonitorRect: PropTypes.func.isRequired,
+    customStageSize: PropTypes.shape({
+        width: PropTypes.number,
+        height: PropTypes.number
+    }).isRequired,
     draggable: PropTypes.bool,
     height: PropTypes.number,
     id: PropTypes.string.isRequired,
@@ -283,6 +304,7 @@ Monitor.defaultProps = {
 };
 const mapStateToProps = state => ({
     monitorLayout: state.scratchGui.monitorLayout,
+    customStageSize: state.scratchGui.customStageSize,
     theme: state.scratchGui.theme.theme,
     // render on toolbox updates since changes to the blocks could affect monitor labels, i.e. updated locale
     toolboxXML: state.scratchGui.toolbox.toolboxXML,

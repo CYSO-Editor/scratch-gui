@@ -160,7 +160,7 @@ const _rectsIntersect = function (rect1, rect2) {
 };
 
 // We need to place a monitor with the given width and height. Return a rect defining where it should be placed.
-const getInitialPosition = function (state, monitorId, eltWidth, eltHeight) {
+const getInitialPosition = function (state, monitorId, eltWidth, eltHeight, stageWidth, stageHeight) {
     // If this monitor was purposefully moved to a certain position before, put it back in that position
     if (Object.prototype.hasOwnProperty.call(state.savedMonitorPositions, monitorId)) {
         const saved = state.savedMonitorPositions[monitorId];
@@ -169,6 +169,9 @@ const getInitialPosition = function (state, monitorId, eltWidth, eltHeight) {
             lowerEnd: {x: saved.x + eltWidth, y: saved.y + eltHeight}
         };
     }
+
+    const screenWidth = stageWidth || SCREEN_WIDTH;
+    const screenHeight = stageHeight || SCREEN_HEIGHT;
 
     // Try all starting positions for the new monitor to find one that doesn't intersect others
     const endXs = [0];
@@ -211,11 +214,11 @@ const getInitialPosition = function (state, monitorId, eltWidth, eltHeight) {
                 }
             }
             // If the rect overlaps the ends of the screen
-            if (rect.lowerEnd.x > SCREEN_WIDTH || rect.lowerEnd.y > SCREEN_HEIGHT) {
+            if (rect.lowerEnd.x > screenWidth || rect.lowerEnd.y > screenHeight) {
                 // If rect is not too close to completely off screen, set it as plan B
                 if (!planB &&
-                        !(rect.upperStart.x + SCREEN_EDGE_BUFFER > SCREEN_WIDTH ||
-                            rect.upperStart.y + SCREEN_EDGE_BUFFER > SCREEN_HEIGHT)) {
+                        !(rect.upperStart.x + SCREEN_EDGE_BUFFER > screenWidth ||
+                            rect.upperStart.y + SCREEN_EDGE_BUFFER > screenHeight)) {
                     planB = monitorRect;
                 }
                 continue;
@@ -230,8 +233,8 @@ const getInitialPosition = function (state, monitorId, eltWidth, eltHeight) {
     }
 
     // If plan B fails and there's nowhere reasonable to put it, plan C is to place the monitor randomly
-    const randX = Math.ceil(Math.random() * (SCREEN_WIDTH / 2));
-    const randY = Math.ceil(Math.random() * (SCREEN_HEIGHT - SCREEN_EDGE_BUFFER));
+    const randX = Math.ceil(Math.random() * (screenWidth / 2));
+    const randY = Math.ceil(Math.random() * (screenHeight - SCREEN_EDGE_BUFFER));
     return {
         upperStart: {
             x: randX,
