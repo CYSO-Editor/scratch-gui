@@ -22,8 +22,6 @@
     }
 }
 
-/* Under 雾砂 the whole editor is light and airy, so a heavy dark dim feels out
-   of place. Soften it to a faint cool tint that keeps the fresh mood. */
 :global(.tw-misty-sand-theme) .overlay {
     background: rgba(70, 85, 110, 0.16);
     backdrop-filter: blur(6px) saturate(120%);

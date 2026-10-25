@@ -1,5 +1,4 @@
 import React from 'react';
-import {APP_NAME} from '../../lib/brand';
 import {isScratchDesktop} from '../../lib/isScratchDesktop';
 import CloseButton from '../close-button/close-button.jsx';
 import styles from './tw-news.css';

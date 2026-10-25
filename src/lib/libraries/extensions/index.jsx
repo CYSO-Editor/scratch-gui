@@ -53,7 +53,6 @@ import twIcon from './tw/tw.svg';
 import customExtensionIcon from './custom/custom.svg';
 import returnIcon from './custom/return.svg';
 import galleryIcon from './gallery/gallery.svg';
-import {APP_NAME} from '../../brand';
 
 export default [
     {

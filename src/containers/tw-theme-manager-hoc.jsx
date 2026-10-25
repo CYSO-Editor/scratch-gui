@@ -5,7 +5,7 @@ import bindAll from 'lodash.bindall';
 import {applyGuiColors, applyCustomTheme} from '../lib/themes/guiHelpers';
 import {BLOCKS_CUSTOM, Theme} from '../lib/themes';
 import {detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance';
-import {setTheme, setCustomTheme} from '../reducers/theme';
+import {setTheme} from '../reducers/theme';
 
 const TWThemeManagerHOC = function (WrappedComponent) {
     class TWThemeManagerComponent extends React.Component {

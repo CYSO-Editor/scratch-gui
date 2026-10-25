@@ -10,8 +10,8 @@ const PERMISSION_OPTIONS = [
 ];
 
 const PermissionItem = props => {
-    const {permissionType, permissionInfo, value, onChange, riskLevelStyle} = props;
-    
+    const {permissionInfo, value, onChange, riskLevelStyle} = props;
+
     const handleChange = (e) => {
         onChange(e.target.value);
     };
@@ -51,7 +51,6 @@ const PermissionItem = props => {
 };
 
 PermissionItem.propTypes = {
-    permissionType: PropTypes.string.isRequired,
     permissionInfo: PropTypes.shape({
         label: PropTypes.string.isRequired,
         description: PropTypes.string.isRequired,

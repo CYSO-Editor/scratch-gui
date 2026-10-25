@@ -1,6 +1,3 @@
-
-// (backdrop-filter blur) effect lives in MISTY_SAND_DEFAULT_CSS (guiHelpers),
-// scoped to the .tw-misty-sand-theme root class.
 const guiColors = {
     'color-scheme': 'light',
 
@@ -58,7 +55,6 @@ const guiColors = {
 
     'drop-highlight': 'hsla(205, 90%, 72%, 1)',
 
-    // Translucent so the frosted-glass background (set in misty-sand.css) shows through.
     'menu-bar-background': 'hsla(0, 0%, 100%, 0.5)',
     'menu-bar-background-image': 'none',
     'menu-bar-foreground': 'hsla(220, 25%, 25%, 1)',

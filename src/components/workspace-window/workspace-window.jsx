@@ -19,7 +19,6 @@ const WorkspaceWindowComponent = props => {
         intl,
         isDropTarget,
         isFocused,
-        isRtl,
         maximized,
         targetIds,
         targets,
@@ -271,7 +270,6 @@ WorkspaceWindowComponent.propTypes = {
     intl: intlShape.isRequired,
     isDropTarget: PropTypes.bool,
     isFocused: PropTypes.bool,
-    isRtl: PropTypes.bool,
     maximized: PropTypes.bool,
     targetIds: PropTypes.arrayOf(PropTypes.string),
     targets: PropTypes.arrayOf(PropTypes.shape({

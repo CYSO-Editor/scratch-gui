@@ -37,8 +37,6 @@
     align-items: center;
 }
 
-/* 雾砂全屏磨砂层：覆盖全视口，模糊其背后的编辑区，叠加半透明白底形成磨砂玻璃质感。
-   放在 stage-wrapper 堆叠上下文内最底层（z-index:-1），舞台内容在其之上保持清晰。 */
 .stage-wrapper .full-screen-frost {
     position: fixed;
     top: $stage-menu-height;

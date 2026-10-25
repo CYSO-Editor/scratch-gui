@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 import ReactModal from 'react-modal';
 import PermissionGroupRow from './permission-group-row.jsx';
-import Tooltip from './tooltip.jsx';
 import styles from './styles.css';
 
 const CYSOCoreCenter = props => {

@@ -4,8 +4,8 @@ import Tooltip from './tooltip.jsx';
 import styles from './styles.css';
 
 const PermissionInlineItem = props => {
-    const {permissionType, permissionInfo, value, onChange, riskLevel, isDarkMode} = props;
-    
+    const {permissionInfo, value, onChange, riskLevel, isDarkMode} = props;
+
     const handleChange = (e) => {
         onChange(e.target.value);
     };
@@ -30,7 +30,6 @@ const PermissionInlineItem = props => {
 };
 
 PermissionInlineItem.propTypes = {
-    permissionType: PropTypes.string.isRequired,
     permissionInfo: PropTypes.shape({
         label: PropTypes.string.isRequired,
         description: PropTypes.string.isRequired,

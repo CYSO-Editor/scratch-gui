@@ -15,7 +15,6 @@ import CommunityButton from './community-button.jsx';
 import ShareButton from './share-button.jsx';
 import {ComingSoonTooltip} from '../coming-soon/coming-soon.jsx';
 import Divider from '../divider/divider.jsx';
-import SaveStatus from './save-status.jsx';
 import ProjectWatcher from '../../containers/project-watcher.jsx';
 import MenuBarMenu from './menu-bar-menu.jsx';
 import MenuLabel from './tw-menu-label.jsx';
@@ -33,7 +32,6 @@ import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
-import TWNews from './tw-news.jsx';
 import CYSOCoreButton from './cyso-core-button.jsx';
 import UpdateNoticeButton from './update-notice-button.jsx';
 
@@ -93,9 +91,6 @@ import collectMetadata from '../../lib/collect-metadata';
 
 import styles from './menu-bar.css';
 
-import helpIcon from '../../lib/assets/icon--tutorials.svg';
-import mystuffIcon from './icon--mystuff.png';
-import profileIcon from './icon--profile.png';
 import remixIcon from './icon--remix.svg';
 import dropdownCaret from './dropdown-caret.svg';
 import cysoSoftwareIcon from './icon--cyso-software.svg';
@@ -115,14 +110,6 @@ import sharedMessages from '../../lib/shared-messages';
 import SeeInsideButton from './tw-see-inside.jsx';
 import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
 import {APP_NAME} from '../../lib/brand.js';
-
-const ariaMessages = defineMessages({
-    tutorials: {
-        id: 'gui.menuBar.tutorialsLibrary',
-        defaultMessage: 'Tutorials',
-        description: 'accessibility text for the tutorials button'
-    }
-});
 
 const twMessages = defineMessages({
     compileError: {

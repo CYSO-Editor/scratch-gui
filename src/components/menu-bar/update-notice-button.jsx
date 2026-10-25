@@ -30,9 +30,6 @@ UpdateIcon.propTypes = {
     className: PropTypes.string
 };
 
-/**
- * 菜单栏右侧的更新入口。检测到新版本时显示主题色图标和提示点，展开后从菜单里进入更新窗口。
- */
 class UpdateNoticeButton extends React.Component {
     constructor (props) {
         super(props);

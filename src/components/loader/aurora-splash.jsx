@@ -13,10 +13,6 @@ const STATUS_LOAD = '正在加载素材 (';
 const STATUS_DOWNLOAD = '正在下载素材 (';
 const STATUS_READY = '即将完成…';
 
-/**
- * 各阶段的目标百分比。进度条向 goal 缓动逼近，百分比只表示阶段而非实际耗时。
- * gui.html 在 React 挂载前跑同一套阶段并交接过来，因此交接点两边都连续。
- */
 const STAGE_GOAL = {
   init: 10,
   bundle: 22,
@@ -97,7 +93,6 @@ class AuroraSplash extends React.Component {
     this.onHandoff = this.onHandoff.bind(this);
   }
 
-  /** 告知 gui.html 里的加载界面可以退场。 */
   reportReady () {
     if (window.cysoReactSplashReady) return;
     window.cysoReactSplashReady = true;
@@ -110,7 +105,6 @@ class AuroraSplash extends React.Component {
     window.addEventListener('cyso:load-progress', this.onProgress);
     window.addEventListener('cyso:load-phase', this.onPhase);
     window.addEventListener('cyso:load-done', this.onDone);
-    // 交接事件可能早于挂载被丢弃，gui.html 会把值留在 window 上。
     if (window.cysoBootDone) {
       this.adoptHandoff(window.cysoBootHandoff);
       this.ensureVisible();
@@ -133,13 +127,11 @@ class AuroraSplash extends React.Component {
   componentDidUpdate (prevProps) {
     if (!prevProps.active && this.props.active) {
       if (this.bootPending) {
-        // 首屏期间 active 会抖动，重置进度会让加载界面闪一下。
         this.ensureVisible();
         this.armWatchdog();
         this.startLoop();
         return;
       }
-      // 只响应用户发起的加载，状态机自行推进的 loading 会让加载界面在就绪后重新出现。
       if (!this.props.userInitiated) return;
       this.reset();
       if (this.shouldShow()) {
@@ -204,7 +196,6 @@ class AuroraSplash extends React.Component {
     if (!this.state.visible && this.mounted) {
       this.setState({visible: true});
     }
-    // 只有本组件确实要显示时才能让 gui.html 的加载界面退场，否则中间会露出未构建完的主界面。
     this.reportReady();
   }
 
@@ -329,7 +320,6 @@ class AuroraSplash extends React.Component {
       this.goal = Math.max(this.goal, STAGE_GOAL.parse);
       this.setStatus(STATUS_PARSE);
     } else if (phase === 'default' || phase === 'project') {
-      // 这两个阶段之后紧接主进程读文件，期间没有更细的进度可报。
       this.goal = Math.max(this.goal, STAGE_GOAL.project);
       this.setStatus(STATUS_PROJECT);
     } else if (phase === 'assets') {

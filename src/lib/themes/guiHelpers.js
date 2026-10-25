@@ -78,6 +78,31 @@ html.tw-misty-sand-theme [class*="modal_modal-content_"] {
 }
 html.tw-misty-sand-theme [class*="menu_submenu_"] { background: transparent !important; }
 
+html.tw-misty-sand-theme nav.react-contextmenu,
+html.tw-misty-sand-theme [class*="context-menu_context-menu_"],
+html.tw-misty-sand-theme [class*="cyso-context-menu_menu_"] {
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 40px rgba(40, 60, 90, 0.22);
+}
+html.tw-misty-sand-theme nav.react-contextmenu::before,
+html.tw-misty-sand-theme [class*="context-menu_context-menu_"]::before,
+html.tw-misty-sand-theme [class*="cyso-context-menu_menu_"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+}
+
 html.tw-misty-sand-theme [class*="settings-modal_body_"],
 html.tw-misty-sand-theme [class*="library_library-scroll-grid_"] {
   background: transparent !important;
@@ -104,6 +129,18 @@ html.tw-misty-sand-theme.tw-custom-bg-perf [class*="modal_modal-content_"] {
   backdrop-filter: blur(16px) saturate(155%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(155%) !important;
   background: rgba(255, 255, 255, 0.82) !important;
+}
+html.tw-misty-sand-theme.tw-custom-bg-perf nav.react-contextmenu,
+html.tw-misty-sand-theme.tw-custom-bg-perf [class*="context-menu_context-menu_"],
+html.tw-misty-sand-theme.tw-custom-bg-perf [class*="cyso-context-menu_menu_"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+html.tw-misty-sand-theme.tw-custom-bg-perf nav.react-contextmenu::before,
+html.tw-misty-sand-theme.tw-custom-bg-perf [class*="context-menu_context-menu_"]::before,
+html.tw-misty-sand-theme.tw-custom-bg-perf [class*="cyso-context-menu_menu_"]::before {
+  display: none;
 }
 html.tw-misty-sand-theme.tw-custom-bg-perf [class*="gui_gui_"],
 html.tw-misty-sand-theme.tw-custom-bg-perf [class*="gui_body-wrapper_"] {
@@ -231,6 +268,31 @@ html.tw-misty-sand-theme.tw-misty-sand-dark [class*="modal_modal-content_"] {
   color: #e8e9ee;
 }
 html.tw-misty-sand-theme.tw-misty-sand-dark [class*="menu_submenu_"] { background: transparent !important; }
+html.tw-misty-sand-theme.tw-misty-sand-dark nav.react-contextmenu,
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="context-menu_context-menu_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="cyso-context-menu_menu_"] {
+  isolation: isolate;
+  background: rgba(28, 30, 38, 0.72) !important;
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: #e8e9ee;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark nav.react-contextmenu::before,
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="context-menu_context-menu_"]::before,
+html.tw-misty-sand-theme.tw-misty-sand-dark [class*="cyso-context-menu_menu_"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(6, 7, 11, 0.45);
+  pointer-events: none;
+}
 html.tw-misty-sand-theme.tw-misty-sand-dark [class*="settings-modal_body_"],
 html.tw-misty-sand-theme.tw-misty-sand-dark [class*="library_library-scroll-grid_"] {
   background: transparent !important;
@@ -326,6 +388,18 @@ html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="modal_mod
   backdrop-filter: blur(16px) saturate(155%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(155%) !important;
   background: rgba(38, 39, 48, 0.92) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf nav.react-contextmenu,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="context-menu_context-menu_"],
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="cyso-context-menu_menu_"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(38, 39, 48, 0.95) !important;
+}
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf nav.react-contextmenu::before,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="context-menu_context-menu_"]::before,
+html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="cyso-context-menu_menu_"]::before {
+  display: none;
 }
 html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="gui_gui_"],
 html.tw-misty-sand-theme.tw-misty-sand-dark.tw-custom-bg-perf [class*="gui_body-wrapper_"] {
