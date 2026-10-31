@@ -128,12 +128,13 @@ class LibraryItemComponent extends React.PureComponent {
                             ))}
                         </div>
                     )}
-                    {this.props.isCyso && (
-                        <div className={styles.cysoTag}>
-                            CYSO
-                        </div>
-                    )}
                 </div>
+
+                {this.props.isCyso && (
+                    <div className={styles.cysoBadge}>
+                        CYSO CORE
+                    </div>
+                )}
 
                 {(this.props.docsURI || this.props.samples) && (
                     <div className={styles.extensionLinks}>

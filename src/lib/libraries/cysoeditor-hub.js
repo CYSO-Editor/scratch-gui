@@ -576,35 +576,6 @@ const getCachedExtensions = () => {
 
 const CUSTOM_LIBRARY_STORAGE_KEY = 'tw:custom-extension-libraries';
 
-const CUSTOM_LIBRARY_STANDARD_SCHEMA = [
-    '标准扩展库 JSON 结构（自定义 JS 需返回此结构）：',
-    '',
-    '{',
-    '  "extensions": [',
-    '    {',
-    '      "id": "ext_001",              // 必需：扩展唯一ID，用于拼接文件/封面地址',
-    '      "name": "扩展名称",           // 必需',
-    '      "description": "扩展简介",    // 可选',
-    '      "author": "作者名",           // 可选',
-    '      "author_homepage": "作者主页URL（可选，提供后作者名可点击跳转）", // 可选',
-    '      "cover": "封面完整URL",       // 可选：省略则使用封面模板 {id}.png',
-    '      "download_url": "扩展JS完整URL", // 可选：省略则使用文件模板 {id}.js',
-    '      "category": ["分类1", "分类2"],   // 可选',
-    '      "version": "1.0.0",          // 可选',
-    '      "href": "详情页URL"           // 可选',
-    '    }',
-    '  ]',
-    '}',
-    '',
-    '说明：',
-    '1. 顶层也可以是直接数组 [ {...}, {...} ]。',
-    '2. 手动绑定：在“字段映射”中填写源JSON里对应的字段名（如源里ID字段叫 ext_id，则填写 ext_id）。',
-    '3. 下载地址与封面图片，在“字段名”与“地址模板”中二选一填写：',
-    '   · 使用字段名：读取源JSON里该字段的值作为完整URL；',
-    '   · 使用地址模板：模板支持 {字段名} 占位符，用源JSON中各字段的值替换，例如 https://extensions.bilup.org/{id}.js 或 https://cdn.example.com/{image}',
-    '4. 自定义JS：编写一段代码（函数体或返回函数），通过 fetch 拉取数据并返回上面的标准结构。'
-].join('\n');
-
 const getCustomLibraries = () => {
     try {
         const raw = localStorage.getItem(CUSTOM_LIBRARY_STORAGE_KEY);
@@ -649,15 +620,25 @@ const removeCustomLibrary = id => {
 };
 
 const runUserJs = async (code, fetchFn, libraryUrl) => {
-    try {
-        const bodyFn = new Function('fetch', 'libraryUrl', `return (async () => { ${code} })();`);
-        const result = await bodyFn(fetchFn, libraryUrl);
-        if (result !== undefined) return result;
-    } catch (e) {
-        log.warn('Custom library JS (body mode) failed, trying function mode:', e);
+    const trimmed = String(code || '').trim();
+    if (!trimmed) {
+        throw new Error('自定义 JS 代码为空');
     }
-    const exprFn = new Function('fetch', 'libraryUrl', `return (${code})(fetch, libraryUrl);`);
-    return await exprFn(fetchFn, libraryUrl);
+    let result;
+    try {
+        const bodyFn = new Function('fetch', 'libraryUrl', `return (async () => {\n${trimmed}\n})();`);
+        result = await bodyFn(fetchFn, libraryUrl);
+        if (result === undefined) {
+            const exprFn = new Function('fetch', 'libraryUrl', `return (${trimmed});`);
+            result = await exprFn(fetchFn, libraryUrl);
+        }
+    } catch (e) {
+        throw new Error(`自定义 JS 执行失败：${e && e.message ? e.message : e}`);
+    }
+    if (result === undefined || result === null) {
+        throw new Error('自定义 JS 未返回数据，需 return 官方结构的 extensions 数组');
+    }
+    return result;
 };
 
 const extractStandardArray = raw => {
@@ -709,107 +690,102 @@ const normalizeRawExtensions = (raw, fieldMapping, locale, localize) => {
     return list.map(item => {
         const baseName = value(item, fm.name, 'name');
         const baseDesc = value(item, fm.description, 'description');
+        const by = value(item, fm.by, 'by');
+        const original = value(item, fm.original, 'original');
         return {
             id: value(item, fm.id, 'id'),
+            slug: value(item, fm.slug, 'slug'),
             name: useTranslations ? (pickTranslation(item, nameTransKey, locale) ?? baseName) : baseName,
             description: useTranslations ? (pickTranslation(item, descTransKey, locale) ?? baseDesc) : baseDesc,
-            author: value(item, fm.author, 'author', 'by.0.name'),
-            author_homepage: value(item, fm.author_homepage, 'author_homepage', 'by.0.link'),
-            cover: value(item, fm.cover, 'cover'),
-            download_url: value(item, fm.download_url, 'download_url'),
-            category: value(item, fm.category, 'category'),
-            version: value(item, fm.version, 'version'),
-            href: value(item, fm.href, 'href'),
-            _raw: item
+            image: value(item, fm.image, 'image'),
+            by: Array.isArray(by) ? by : undefined,
+            original: Array.isArray(original) ? original : undefined,
+            docs: value(item, fm.docs, 'docs'),
+            samples: value(item, fm.samples, 'samples'),
+            scratchCompatible: value(item, fm.scratchCompatible, 'scratchCompatible')
         };
     });
 };
 
-const applyUrlTemplates = (item, fileTemplate, coverTemplate, downloadMode, coverMode) => {
-    const id = item.id;
-    const vars = { ...(item && item._raw), ...item };
-    delete vars._raw;
-    const fill = template => {
-        if (!template) return template;
-        return template.replace(/\{([^}]+)\}/g, (match, key) => {
-            const val = key === 'id' ? id : vars[key];
-            if (val === undefined || val === null) return match;
-            return String(val);
-        });
-    };
-    let download_url = item.download_url;
-    if (!download_url && fileTemplate && id != null && downloadMode !== 'field') {
-        download_url = fill(fileTemplate);
-    }
-    let cover = item.cover;
-    if (!cover && coverTemplate && id != null && coverMode !== 'field') {
-        cover = fill(coverTemplate);
-    }
-    return { ...item, download_url, cover };
+const getLibraryBaseUrl = libraryUrl => {
+    if (!libraryUrl || typeof libraryUrl !== 'string') return '';
+    const marker = '/generated-metadata/';
+    const idx = libraryUrl.indexOf(marker);
+    if (idx > 0) return libraryUrl.slice(0, idx);
+    return libraryUrl.slice(0, libraryUrl.lastIndexOf('/'));
 };
+
+const resolveLibraryUrl = (baseUrl, path) => {
+    if (!path) return null;
+    if (/^(https?:|data:)/i.test(path)) return path;
+    return `${baseUrl ? `${baseUrl}/` : ''}${String(path).replace(/^\//, '')}`;
+};
+
+const normalizeCredits = list => (list || [])
+    .map(c => {
+        if (typeof c === 'string') return {name: c};
+        if (c && c.name) return {name: c.name, homepage: c.link || c.homepage};
+        return null;
+    })
+    .filter(Boolean);
 
 const mapStandardToLibraryItems = (standardArray, sourceConfig) => {
     const sourceId = sourceConfig.sourceId;
-    const sourceName = sourceConfig.sourceName;
-    const fileTemplate = sourceConfig.fileTemplate;
-    const coverTemplate = sourceConfig.coverTemplate;
-    const downloadMode = sourceConfig.downloadMode;
-    const coverMode = sourceConfig.coverMode;
+    const baseUrl = getLibraryBaseUrl(sourceConfig.libraryUrl);
     const iconFallback = sourceConfig.iconFallback || null;
     return extractStandardArray(standardArray)
         .filter(item => item && item.id != null && item.name)
         .map(item => {
-            const t = applyUrlTemplates(item, fileTemplate, coverTemplate, downloadMode, coverMode);
-            const id = String(t.id);
-            const name = String(t.name);
-            const description = t.description ? String(t.description) : '';
-            const author = t.author ? String(t.author) : '';
-            const authorHomepage = t.author_homepage != null ? String(t.author_homepage) : null;
-            const downloadUrl = t.download_url || null;
-            const cover = t.cover || null;
-            const categories = Array.isArray(t.category) ? t.category.map(String) : [];
+            const slug = item.slug || item.id;
+            const downloadUrl = resolveLibraryUrl(baseUrl, `${slug}.js`);
+            const cover = item.image ? resolveLibraryUrl(baseUrl, item.image) : null;
+            const docsUrl = item.docs ? resolveLibraryUrl(baseUrl, `${slug}`) : null;
+            const samples = Array.isArray(item.samples) ? item.samples.map(sample =>
+                typeof sample === 'string' ? {
+                    href: resolveLibraryUrl(baseUrl, `samples/${sample}.sb3`),
+                    text: sample
+                } : sample
+            ) : null;
+            const credits = normalizeCredits([
+                ...(Array.isArray(item.original) ? item.original : []),
+                ...(Array.isArray(item.by) ? item.by : [])
+            ]);
             return {
-                name: name,
-                description: description,
-                extensionId: `${sourceId}-${id}`,
-                extensionURL: downloadUrl ? getProxiedUrl(downloadUrl) : null,
-                extensionURLs: downloadUrl ? getProxiedUrls(downloadUrl) : [],
+                name: String(item.name),
+                description: item.description ? String(item.description) : '',
+                extensionId: `${sourceId}-${item.id}`,
+                extensionURL: getProxiedUrl(downloadUrl),
+                extensionURLs: getProxiedUrls(downloadUrl),
                 downloadUrl: downloadUrl,
                 iconURL: cover ? getProxiedUrl(cover) : iconFallback,
-                tags: ['custom-library', sourceId, ...categories],
-                credits: author ? [{ name: author, homepage: authorHomepage }] : [],
+                tags: ['custom-library', sourceId],
+                credits: credits,
                 featured: false,
                 showDetails: true,
-                version: t.version ? String(t.version) : null,
-                updateDate: t.updateDate || t.updated_at || null,
-                key: `${sourceId}-${id}`,
-                href: t.href || null,
+                incompatibleWithScratch: item.scratchCompatible === false,
+                key: `${sourceId}-${item.id}`,
+                href: docsUrl,
                 isCyso: false,
-                category: categories,
-                authorHomepage: authorHomepage,
-                authorName: author,
-                fullDescription: description,
-                sourceName: sourceName
+                samples: samples,
+                sourceName: sourceConfig.sourceName
             };
-        })
-        .filter(item =>
-            (item.extensionURL && item.extensionURL !== '') ||
-            (item.extensionURLs && item.extensionURLs.length > 0));
+        });
 };
 
 const fetchAndParseLibrary = async (libConfig, iconFallback, locale) => {
     const sourceConfig = {
         sourceId: libConfig.id,
         sourceName: libConfig.name,
-        fileTemplate: libConfig.fileTemplate,
-        coverTemplate: libConfig.coverTemplate,
-        downloadMode: libConfig.downloadMode,
-        coverMode: libConfig.coverMode,
+        libraryUrl: libConfig.url,
         iconFallback: iconFallback || null
     };
     let standardArray;
     if (libConfig.type === 'js') {
-        standardArray = await runUserJs(libConfig.code, fetch, libConfig.url);
+        const raw = await runUserJs(libConfig.code, fetch, libConfig.url);
+        if (!extractStandardArray(raw).length) {
+            throw new Error('自定义 JS 返回的数据中未找到扩展数组，需 return 数组或 { "extensions": [...] }');
+        }
+        standardArray = raw;
     } else {
         const res = await fetch(libConfig.url);
         if (!res.ok) {
@@ -849,6 +825,5 @@ export {
     updateCustomLibrary,
     removeCustomLibrary,
     fetchAndParseLibrary,
-    mapStandardToLibraryItems,
-    CUSTOM_LIBRARY_STANDARD_SCHEMA
+    mapStandardToLibraryItems
 };

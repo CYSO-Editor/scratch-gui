@@ -186,6 +186,7 @@ class LibraryItem extends React.PureComponent {
                 isPlaying={this.props.isPlaying}
                 name={this.props.name}
                 credits={this.props.credits}
+                isCyso={this.props.isCyso}
                 showDetails={this.props.showDetails}
                 docsURI={this.props.docsURI}
                 samples={this.props.samples}
@@ -256,7 +257,8 @@ LibraryItem.propTypes = {
     onMouseEnter: PropTypes.func.isRequired,
     onMouseLeave: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
-    showPlayButton: PropTypes.bool
+    showPlayButton: PropTypes.bool,
+    isCyso: PropTypes.bool
 };
 
 export default injectIntl(LibraryItem);

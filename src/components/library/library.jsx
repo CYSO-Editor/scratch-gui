@@ -231,51 +231,51 @@ class LibraryComponent extends React.Component {
                 id={this.props.id}
                 onRequestClose={this.handleClose}
             >
-                {(this.props.filterable || this.props.tags) && (
-                    <div className={styles.filterBar}>
-                        {this.props.filterable && (
-                            <Filter
-                                className={classNames(
-                                    styles.filterBarItem,
-                                    styles.filter
-                                )}
-                                filterQuery={this.state.filterQuery}
-                                inputClassName={styles.filterInput}
-                                placeholderText={this.props.intl.formatMessage(messages.filterPlaceholder)}
-                                onChange={this.handleFilterChange}
-                                onClear={this.handleFilterClear}
-                            />
-                        )}
-                        {this.props.filterable && this.props.tags && (
-                            <Divider className={classNames(styles.filterBarItem, styles.divider)} />
-                        )}
-                        {this.props.tags &&
-                            <div className={styles.tagWrapper}>
-                                {tagListPrefix.concat(this.props.tags).map((tagProps, id) => (
-                                    <TagButton
-                                        active={this.state.selectedTag === tagProps.tag.toLowerCase()}
-                                        className={classNames(
-                                            styles.filterBarItem,
-                                            styles.tagButton,
-                                            tagProps.className
-                                        )}
-                                        key={`tag-button-${id}`}
-                                        onClick={this.handleTagClick}
-                                        {...tagProps}
-                                    />
-                                ))}
-                            </div>
-                        }
-                    </div>
-                )}
-                <div
-                    className={classNames(styles.libraryScrollGrid, {
-                        [styles.withFilterBar]: this.props.filterable || this.props.tags
-                    })}
-                    style={this.props.footer ? {flexGrow: 1, flexShrink: 1, flexBasis: '0%', minHeight: 0, height: 'auto', overflowY: 'auto'} : null}
-                    ref={this.setFilteredDataRef}
-                >
-                    {filteredData && this.getFilteredData().map((dataItem, index) => (
+                <div className={styles.libraryBody}>
+                    {(this.props.filterable || this.props.tags) && (
+                        <div className={styles.filterBar}>
+                            {this.props.filterable && (
+                                <Filter
+                                    className={classNames(
+                                        styles.filterBarItem,
+                                        styles.filter
+                                    )}
+                                    filterQuery={this.state.filterQuery}
+                                    inputClassName={styles.filterInput}
+                                    placeholderText={this.props.intl.formatMessage(messages.filterPlaceholder)}
+                                    onChange={this.handleFilterChange}
+                                    onClear={this.handleFilterClear}
+                                />
+                            )}
+                            {this.props.filterable && this.props.tags && (
+                                <Divider className={classNames(styles.filterBarItem, styles.divider)} />
+                            )}
+                            {this.props.tags &&
+                                <div className={styles.tagWrapper}>
+                                    {tagListPrefix.concat(this.props.tags).map((tagProps, id) => (
+                                        <TagButton
+                                            active={this.state.selectedTag === tagProps.tag.toLowerCase()}
+                                            className={classNames(
+                                                styles.filterBarItem,
+                                                styles.tagButton,
+                                                tagProps.className
+                                            )}
+                                            key={`tag-button-${id}`}
+                                            onClick={this.handleTagClick}
+                                            {...tagProps}
+                                        />
+                                    ))}
+                                </div>
+                            }
+                        </div>
+                    )}
+                    <div
+                        className={classNames(styles.libraryScrollGrid, {
+                            [styles.withFilterBar]: this.props.filterable || this.props.tags
+                        })}
+                        ref={this.setFilteredDataRef}
+                    >
+                    {filteredData && filteredData.map((dataItem, index) => (
                         dataItem === '---' ? (
                             <Separator key={`${this.state.selectedTag}-sep-${index}`} />
                         ) : dataItem.isHeader ? (
@@ -321,6 +321,7 @@ class LibraryComponent extends React.Component {
                                 )}-${index}`}
                                 name={dataItem.name}
                                 credits={dataItem.credits}
+                                isCyso={dataItem.isCyso}
                                 showDetails={dataItem.showDetails}
                                 samples={dataItem.samples}
                                 docsURI={dataItem.docsURI}
@@ -347,8 +348,9 @@ class LibraryComponent extends React.Component {
                             />
                         </div>
                     )}
+                    </div>
+                    {this.props.footer}
                 </div>
-                {this.props.footer}
             </Modal>
         );
     }

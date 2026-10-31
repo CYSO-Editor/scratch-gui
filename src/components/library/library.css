@@ -1,6 +1,14 @@
 @import "../../css/units.css";
 @import "../../css/colors.css";
 
+.library-body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100% - $library-header-height);
+    min-height: 0;
+}
+
 .library-scroll-grid {
     display: flex;
     justify-content: flex-start;
@@ -8,20 +16,17 @@
     align-items: flex-start;
     background: $ui-secondary;
     flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0%;
     flex-wrap: wrap;
     overflow-y: auto;
-    height: auto;
+    min-height: 0;
     padding: 0.5rem;
-    height: calc(100% - $library-header-height);
-}
-
-.library-scroll-grid.withFilterBar {
-    height: calc(100% - $library-header-height - $library-filter-bar-height - 2rem);
+    overscroll-behavior: contain;
 }
 
 .filter-bar {
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 3;
     flex-shrink: 0;
     display: flex;
