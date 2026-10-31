@@ -21,6 +21,7 @@
     border-radius: $space;
     text-align: center;
     cursor: pointer;
+    contain: layout paint style;
 }
 
 .library-item-extension {
@@ -267,27 +268,19 @@
     color: #666;
 }
 
-.cysoTag {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+.cysoBadge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--looks-secondary-dark);
+    color: #fff;
+    padding: 3px 8px;
+    font-size: 10px;
     font-weight: bold;
-    margin-top: 8px;
-    display: inline-block;
-}
-.cysoTag:hover {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.8;
-    }
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .libraryItemNameLink {
