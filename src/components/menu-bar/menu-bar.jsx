@@ -1006,7 +1006,7 @@ class MenuBar extends React.Component {
                     <div className={styles.menuBarItem}>
                         <a
                             className={styles.feedbackLink}
-                            href="https://scratch.mit.edu/users/GarboMuffin/#comments"
+                            href="https://github.com/CYSO-Editor/desktop/issues"
                             rel="noopener noreferrer"
                             target="_blank"
                         >
