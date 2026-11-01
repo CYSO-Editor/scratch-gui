@@ -63,6 +63,7 @@ const base = {
     },
     resolve: {
         symlinks: false,
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         modules: [
             'node_modules',
             path.resolve(__dirname, 'node_modules')
@@ -70,8 +71,11 @@ const base = {
         alias: {
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
-            // workspace.enableProcedureReturns 等新 API 缺失。
-            'scratch-blocks$': path.resolve(__dirname, '../scratch-blocks/shim/vertical.js')
+            'scratch-blocks$': path.resolve(__dirname, '../scratch-blocks/shim/vertical.js'),
+            'assets': path.resolve(__dirname, 'src/addons/addons/02agent/assets'),
+            'components': path.resolve(__dirname, 'src/addons/addons/02agent/shims/components'),
+            'hooks': path.resolve(__dirname, 'src/addons/addons/02agent/shims/hooks'),
+            'utils': path.resolve(__dirname, 'src/addons/addons/02agent/shims/utils')
         }
     },
     resolveLoader: {
@@ -102,6 +106,21 @@ const base = {
             }
         },
         {
+            test: /\.tsx?$/,
+            loader: 'babel-loader',
+            include: [
+                path.resolve(__dirname, 'src')
+            ],
+            options: {
+                babelrc: false,
+                plugins: [
+                    ['react-intl', {
+                        messagesDir: './translations/messages/'
+                    }]],
+                presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript']
+            }
+        },
+        {
             test: /\.css$/,
             use: [{
                 loader: 'style-loader'
@@ -125,6 +144,22 @@ const base = {
                         ];
                     }
                 }
+            }]
+        },
+        {
+            test: /\.less$/,
+            use: [{
+                loader: 'style-loader'
+            }, {
+                loader: 'css-loader',
+                options: {
+                    modules: true,
+                    importLoaders: 1,
+                    localIdentName: '[name]_[local]_[hash:base64:5]',
+                    camelCase: true
+                }
+            }, {
+                loader: 'less-loader'
             }]
         }]
     },
