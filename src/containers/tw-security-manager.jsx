@@ -74,6 +74,20 @@ const isCYSOModeExtension = url => {
 const fetchHostsTrustedByUser = new Set();
 const embedHostsTrustedByUser = new Set();
 
+/**
+ * @param {URL} parsed Parsed URL object
+ * @returns {boolean} True if path is untrusted.
+ */
+const isUntrustedPath = parsed => (
+    // Cloudflare serves stuff on /cdn-cgi/ that we don't want to let projects access without showing
+    // a permission prompt to a non-trusted domain (/cdn-cgi/trace contains IP)
+    /^\/cdn-cgi\//i.test(parsed.pathname)
+);
+
+/**
+ * @param {URL} parsed Parsed URL object
+ * @returns {boolean} True if the URL is part of the builtin set of URLs to always trust fetching from.
+ */
 const isAlwaysTrustedForFetching = parsed => (
     isTrustedExtension(parsed.href) ||
     parsed.origin === 'https://turbowarp.org' ||
@@ -112,6 +126,16 @@ let allowedReadClipboard = false;
 let allowedNotify = false;
 let allowedGeolocation = false;
 
+const resetPermissions = () => {
+    fetchHostsTrustedByUser.clear();
+    embedHostsTrustedByUser.clear();
+    allowedAudio = false;
+    allowedVideo = false;
+    allowedReadClipboard = false;
+    allowedNotify = false;
+    allowedGeolocation = false;
+};
+
 const SECURITY_MANAGER_METHODS = [
     'getSandboxMode',
     'canLoadExtensionFromProject',
@@ -143,15 +167,19 @@ class TWSecurityManagerComponent extends React.Component {
             'handleExtensionPermissionChange',
             'applyCYSOCoreEnabled',
             'ensureCYSOCoreEnabled',
-            'closeExtensionPermissionModal'
+            'closeExtensionPermissionModal',
+            'handleRuntimeDisposed'
         ]);
         bindAll(this, SECURITY_MANAGER_METHODS);
         this.nextModalCallbacks = [];
         this.modalLocked = false;
         this.extensionModalQueue = [];
-        
-        
+
         this.acknowledgedBatchExtensions = new Set();
+        /**
+         * Incremented each time previous project disposed.
+         */
+        this.generation = 0;
         this.state = {
             type: null,
             data: null,
@@ -176,7 +204,7 @@ class TWSecurityManagerComponent extends React.Component {
         let pruned = [];
 
         if (hasAppLevelPermissions) {
-            
+
             const existing = loadExtensionPermissions(extensionId);
             const defaults = loadDefaults();
             requested.forEach(perm => {
@@ -190,14 +218,14 @@ class TWSecurityManagerComponent extends React.Component {
                 runtime.extensionPermissions[extensionId] = granted;
             }
 
-            
+
             try {
                 if (typeof EditorPreload !== 'undefined' && EditorPreload.registerExtensionPermissions) {
                     const result = await EditorPreload.registerExtensionPermissions(
                         getAdminToken(), extensionId, requested, extensionName || extensionId);
                     const serverGranted = (result && result.permissions) || granted;
                     const serverPruned = (result && result.pruned) || [];
-                    
+
                     granted = serverGranted;
                     pruned = serverPruned;
                     saveExtensionPermissions(extensionId, granted);
@@ -207,12 +235,12 @@ class TWSecurityManagerComponent extends React.Component {
                     }
                 }
             } catch (e) {
-                
+
             }
 
             const alreadyQueued = this.extensionModalQueue.some(e => e.id === extensionId);
 
-            
+
             const baseId = extensionId.replace(/#\d+$/, '');
             const previewedInBatch = Boolean(this.acknowledgedBatchExtensions) &&
                 this.acknowledgedBatchExtensions.has(baseId);
@@ -262,24 +290,32 @@ class TWSecurityManagerComponent extends React.Component {
         );
     }
 
-    
+
     setCurrentExtensionId (extensionId) {
         if (typeof window !== 'undefined') {
             window.__cysoCurrentExtensionId = extensionId || null;
         }
     }
 
-    
-    
-    
-    
-    
+    handleRuntimeDisposed () {
+        resetPermissions();
+        this.generation++;
+        if (this.state.type) {
+            this.state.callback(false);
+        }
+    }
+
+
+
+
+
+
     checkPermission (permissionType, extensionId = getCurrentExtensionId()) {
         recordPermissionUse(permissionType);
 
         if (!extensionId) {
-            
-            
+
+
             return {result: null, handled: false};
         }
 
@@ -298,7 +334,7 @@ class TWSecurityManagerComponent extends React.Component {
             }
         }
 
-        
+
         return {result: false, handled: true, notRequested: true};
     }
 
@@ -322,6 +358,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async acquireModalLock () {
+        const generation = this.generation;
         if (this.modalLocked) {
             await new Promise(resolve => {
                 this.nextModalCallbacks.push(resolve);
@@ -341,6 +378,11 @@ class TWSecurityManagerComponent extends React.Component {
         };
 
         const showModal = async (type, data) => {
+            if (generation !== this.generation) {
+                // Request is from a previous project.
+                releaseLock();
+                return false;
+            }
             const result = await new Promise(resolve => {
                 this.setState(oldState => ({
                     type,
@@ -350,14 +392,14 @@ class TWSecurityManagerComponent extends React.Component {
                 }));
             });
             releaseLock();
-            return result;
+            return result && generation === this.generation;
         };
 
         return {showModal, releaseLock};
     }
 
     handleAllowed () {
-        
+
         if (this.state.type === SecurityModals.BatchLoadExtensions && this.state.data.extensions) {
             this.state.callback(this.state.data.extensions);
         } else {
@@ -465,13 +507,14 @@ class TWSecurityManagerComponent extends React.Component {
     componentDidMount () {
         this.updateSecurityManagerMethods();
         this.setupEditorPreloadWrapper();
-        
+
         window.addEventListener('cysoCoreLoaded', this.handleCysoCoreLoaded);
-        
+
         if (this.props.vm) {
+            this.props.vm.runtime.on('RUNTIME_DISPOSED', this.handleRuntimeDisposed);
             this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
         }
-        
+
         const defaults = loadDefaults();
         Object.entries(defaults).forEach(([permType, setting]) => {
             if (setting) this.props.setDefaultPermission(permType, setting);
@@ -482,11 +525,11 @@ class TWSecurityManagerComponent extends React.Component {
         if (prevProps.cysoCoreEnabled !== this.props.cysoCoreEnabled) {
             this.updateSecurityManagerMethods();
         }
-        
+
         if (!prevProps.vm && this.props.vm) {
             this.props.vm.addListener('EXTENSION_ADDED', this.handleExtensionAdded);
         }
-        
+
         if (prevProps.cysoCoreEnabled && !this.props.cysoCoreEnabled) {
             cysoCoreEnableDecision = null;
         }
@@ -516,8 +559,9 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     componentWillUnmount () {
+        this.props.vm.runtime.off('RUNTIME_DISPOSED', this.handleRuntimeDisposed);
         window.removeEventListener('cysoCoreLoaded', this.handleCysoCoreLoaded);
-        
+
         if (this.props.vm) {
             this.props.vm.removeListener('EXTENSION_ADDED', this.handleExtensionAdded);
         }
@@ -529,12 +573,12 @@ class TWSecurityManagerComponent extends React.Component {
             const icon = categoryInfo.menuIconURI || categoryInfo.blockIconURI || null;
             const color = categoryInfo.color1 || null;
             const name = categoryInfo.name || extensionId;
-            
+
             const existingExt = registeredExtensions.get(extensionId);
-            
+
             const finalIcon = icon || existingExt?.icon || null;
             const finalColor = color || existingExt?.color || null;
-            
+
             registeredExtensions.set(extensionId, {
                 id: extensionId,
                 name: name,
@@ -542,7 +586,7 @@ class TWSecurityManagerComponent extends React.Component {
                 color: finalColor,
                 permissions: existingExt?.permissions || []
             });
-            
+
             this.props.addLoadedExtension(
                 extensionId,
                 name,
@@ -584,9 +628,9 @@ class TWSecurityManagerComponent extends React.Component {
 
     setupEditorPreloadWrapper () {
         if (typeof EditorPreload === 'undefined') return;
-        
+
         const self = this;
-        
+
         const wrapMethod = (originalMethod, permissionType, getDataFn) => {
             return async function (...args) {
                 const modalData = getDataFn ? getDataFn(...args) : {};
@@ -666,20 +710,20 @@ class TWSecurityManagerComponent extends React.Component {
         if (isTrustedExtension(url)) {
             return 'unsandboxed';
         }
-        
+
         if (extensionsTrustedByUser.has(url)) {
             return 'unsandboxed';
         }
-        
+
         const runtime = this.props.vm?.runtime;
         if (runtime && runtime.extensionPermissions) {
-            
+
             const queryMatch = url.match(/[?&]extensionId=([a-zA-Z0-9_-]+)/);
             const pathMatch = url.match(/\/([a-zA-Z0-9_-]+)(?:\.[a-z0-9]+)?(?:\?.*)?$/i);
             const extId = (queryMatch && queryMatch[1]) || (pathMatch && pathMatch[1]);
             if (extId) {
                 const extPerms = runtime.extensionPermissions[extId];
-                
+
                 if (extPerms && Object.keys(extPerms).length > 0) {
                     return 'unsandboxed';
                 }
@@ -700,7 +744,7 @@ class TWSecurityManagerComponent extends React.Component {
             return true;
         }
 
-        
+
         const {showModal} = await this.acquireModalLock();
         if (url.startsWith('data:')) {
             const allowed = await showModal(SecurityModals.LoadExtension, {
@@ -732,8 +776,8 @@ class TWSecurityManagerComponent extends React.Component {
         }
         return allowed;
     }
-    
-    
+
+
     async batchLoadExtensions (extensionUrls) {
         const candidates = extensionUrls
             .map((url, index) => ({url, index}))
@@ -784,9 +828,9 @@ class TWSecurityManagerComponent extends React.Component {
 
         const allExtensions = [...normalExtensions, ...cysoCoreExtensions];
 
-        
+
         const {showModal} = await this.acquireModalLock();
-        
+
         this.acknowledgedBatchExtensions = new Set(
             cysoCoreExtensions.map(e => e.realId)
         );
@@ -797,11 +841,11 @@ class TWSecurityManagerComponent extends React.Component {
             onToggleUnsandboxed: this._handleToggleUnsandboxed.bind(this)
         });
 
-        
+
         if (result && Array.isArray(result)) {
             const chosenExtensions = result;
 
-            
+
             chosenExtensions.forEach(ext => {
                 if (ext.imported && ext.unsandboxed) {
                     extensionsTrustedByUser.add(ext.url);
@@ -810,17 +854,17 @@ class TWSecurityManagerComponent extends React.Component {
                 }
             });
 
-            
+
             return extensionUrls.map(url => {
                 const ext = chosenExtensions.find(e => e.url === url);
                 return ext ? ext.imported : true;
             });
         }
 
-        
+
         return extensionUrls.map(url => isTrustedExtension(url));
     }
-    
+
     _extractExtensionId (url) {
         if (url.startsWith('data:')) {
             return 'custom_extension';
@@ -831,7 +875,7 @@ class TWSecurityManagerComponent extends React.Component {
         }
         return null;
     }
-    
+
     _handleToggleImport (extensionId) {
         this.setState(oldState => ({
             data: {
@@ -842,7 +886,7 @@ class TWSecurityManagerComponent extends React.Component {
             }
         }));
     }
-    
+
     _handleToggleUnsandboxed (extensionId) {
         this.setState(oldState => ({
             data: {
@@ -858,11 +902,13 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        
+
         if (isAlwaysTrustedForFetching(parsed)) {
-            return true;
+            // For untrusted paths, don't even show a dialog, just auto-reject because users won't understand
+            // what the dialog actually does.
+            return !isUntrustedPath(parsed);
         }
-        
+
         const {showModal, releaseLock} = await this.acquireModalLock();
         const host = (parsed.protocol === 'http:' || parsed.protocol === 'https:' || 
                       parsed.protocol === 'ws:' || parsed.protocol === 'wss:') ? parsed.host : null;
@@ -879,7 +925,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        
+
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.OpenWindow, {url});
     }
@@ -888,13 +934,13 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, VISITABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        
+
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.Redirect, {url});
     }
 
     async canRecordAudio () {
-        
+
         if (!allowedAudio) {
             const {showModal} = await this.acquireModalLock();
             allowedAudio = await showModal(SecurityModals.RecordAudio);
@@ -903,7 +949,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canRecordVideo () {
-        
+
         if (!allowedVideo) {
             const {showModal} = await this.acquireModalLock();
             allowedVideo = await showModal(SecurityModals.RecordVideo);
@@ -912,7 +958,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canReadClipboard () {
-        
+
         if (!allowedReadClipboard) {
             const {showModal} = await this.acquireModalLock();
             allowedReadClipboard = await showModal(SecurityModals.ReadClipboard);
@@ -921,7 +967,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canNotify () {
-        
+
         if (!allowedNotify) {
             const {showModal} = await this.acquireModalLock();
             allowedNotify = await showModal(SecurityModals.Notify);
@@ -930,7 +976,7 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     async canGeolocate () {
-        
+
         if (!allowedGeolocation) {
             const {showModal} = await this.acquireModalLock();
             allowedGeolocation = await showModal(SecurityModals.Geolocate);
@@ -942,7 +988,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        
+
         const host = (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.host : null;
         const {showModal, releaseLock} = await this.acquireModalLock();
         if (host && embedHostsTrustedByUser.has(host)) {
@@ -958,7 +1004,7 @@ class TWSecurityManagerComponent extends React.Component {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
         if (!parsed) return false;
 
-        
+
         const {showModal} = await this.acquireModalLock();
         return showModal(SecurityModals.Download, {url, name});
     }
@@ -991,13 +1037,13 @@ class TWSecurityManagerComponent extends React.Component {
         }
         if (this.state.showExtensionPermissionModal && this.state.pendingExtension) {
             return (
-            <ExtensionPermissionModal
-                key={this.state.pendingExtension.id}
-                extension={this.state.pendingExtension}
-                onPermissionChange={this.handleExtensionPermissionChange}
-                onClose={this.closeExtensionPermissionModal}
-                isDarkMode={isDarkMode}
-            />
+                <ExtensionPermissionModal
+                    key={this.state.pendingExtension.id}
+                    extension={this.state.pendingExtension}
+                    onPermissionChange={this.handleExtensionPermissionChange}
+                    onClose={this.closeExtensionPermissionModal}
+                    isDarkMode={isDarkMode}
+                />
             );
         }
         return null;
@@ -1006,6 +1052,12 @@ class TWSecurityManagerComponent extends React.Component {
 
 TWSecurityManagerComponent.propTypes = {
     vm: PropTypes.shape({
+        runtime: PropTypes.shape({
+            on: PropTypes.func.isRequired,
+            off: PropTypes.func.isRequired,
+            cysoCoreEnabled: PropTypes.bool,
+            extensionPermissions: PropTypes.object
+        }).isRequired,
         extensionManager: PropTypes.shape({
             securityManager: PropTypes.shape(
                 SECURITY_MANAGER_METHODS.reduce((obj, method) => {
@@ -1013,10 +1065,6 @@ TWSecurityManagerComponent.propTypes = {
                     return obj;
                 }, {})
             )
-        }),
-        runtime: PropTypes.shape({
-            cysoCoreEnabled: PropTypes.bool,
-            extensionPermissions: PropTypes.object
         })
     }),
     securityManager: PropTypes.shape(Object.fromEntries(SECURITY_MANAGER_METHODS.map(i => [i, PropTypes.func]))),

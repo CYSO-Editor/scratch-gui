@@ -198,7 +198,7 @@ const GUIComponent = props => {
             <React.Fragment>
                 <TWSecurityManager securityManager={securityManager} />
                 <TWRestorePointManager />
-                <TWWindChimeSubmitter isEmbedded={isEmbedded} />
+                <TWWindChimeSubmitter isEmbedded={isEmbedded} vm={vm} />
                 <CYSOCoreCenter />
                 {usernameModalVisible && <TWUsernameModal />}
                 {settingsModalVisible && <TWSettingsModal />}

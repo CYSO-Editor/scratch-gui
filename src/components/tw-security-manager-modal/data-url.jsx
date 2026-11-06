@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {base64ToArrayBuffer} from '../../lib/tw-base64-utils';
 import styles from './data-url.css';
 
 /**
@@ -15,15 +16,9 @@ const decodeDataURI = dataURI => {
     const data = dataURI.substring(delimeter + 1);
     if (contentType.endsWith(';base64')) {
         try {
-            
-            const binaryString = atob(data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            const decoder = new TextDecoder('utf-8');
-            return decoder.decode(bytes);
+            // A direct atob() mishandles international characters
+            // https://github.com/TurboWarp/scratch-gui/issues/1151
+            return new TextDecoder().decode(base64ToArrayBuffer(data));
         } catch (e) {
             return dataURI;
         }

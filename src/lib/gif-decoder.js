@@ -2,7 +2,7 @@ import {GifReader} from 'omggif';
 
 export default (arrayBuffer, onFrame) => {
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', {willReadFrequently: true});
     const gifReader = new GifReader(new Uint8Array(arrayBuffer));
     const numFrames = gifReader.numFrames();
     canvas.width = gifReader.width;
