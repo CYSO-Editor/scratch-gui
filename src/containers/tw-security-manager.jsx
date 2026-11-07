@@ -399,12 +399,12 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleAllowed () {
+        const {type, data} = this.state;
 
-        if (this.state.type === SecurityModals.BatchLoadExtensions && this.state.data.extensions) {
-            this.state.callback(this.state.data.extensions);
-        } else {
-            this.state.callback(true);
+        if (type === SecurityModals.BatchLoadExtensions && data && data.selection) {
+            data.selection.extensions = data.extensions;
         }
+        this.state.callback(true);
     }
 
     handleDenied () {
@@ -828,6 +828,7 @@ class TWSecurityManagerComponent extends React.Component {
 
         const allExtensions = [...normalExtensions, ...cysoCoreExtensions];
 
+        const selection = {};
 
         const {showModal} = await this.acquireModalLock();
 
@@ -836,16 +837,15 @@ class TWSecurityManagerComponent extends React.Component {
         );
 
         const result = await showModal(SecurityModals.BatchLoadExtensions, {
+            selection,
             extensions: allExtensions,
             onToggleImport: this._handleToggleImport.bind(this),
             onToggleUnsandboxed: this._handleToggleUnsandboxed.bind(this)
         });
 
+        const chosenExtensions = selection.extensions;
 
-        if (result && Array.isArray(result)) {
-            const chosenExtensions = result;
-
-
+        if (result && Array.isArray(chosenExtensions)) {
             chosenExtensions.forEach(ext => {
                 if (ext.imported && ext.unsandboxed) {
                     extensionsTrustedByUser.add(ext.url);
@@ -854,13 +854,11 @@ class TWSecurityManagerComponent extends React.Component {
                 }
             });
 
-
             return extensionUrls.map(url => {
                 const ext = chosenExtensions.find(e => e.url === url);
                 return ext ? ext.imported : true;
             });
         }
-
 
         return extensionUrls.map(url => isTrustedExtension(url));
     }
