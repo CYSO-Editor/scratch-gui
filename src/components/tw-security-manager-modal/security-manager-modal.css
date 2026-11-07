@@ -1,5 +1,16 @@
 @import "../../css/colors.css";
 
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 6500;
+    background-color: $ui-modal-overlay;
+    color: $ui-modal-foreground;
+}
+
 .modal-content {
     width: 440px;
     margin-top: 25px;

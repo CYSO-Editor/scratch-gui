@@ -395,7 +395,16 @@ class TWSecurityManagerComponent extends React.Component {
             return result && generation === this.generation;
         };
 
-        return {showModal, releaseLock};
+        const showModalWithLoadWaiting = async (type, data) => {
+            this.setLoadWaiting(true);
+            try {
+                return await showModal(type, data);
+            } finally {
+                this.setLoadWaiting(false);
+            }
+        };
+
+        return {showModal: showModalWithLoadWaiting, releaseLock};
     }
 
     handleAllowed () {
@@ -412,6 +421,11 @@ class TWSecurityManagerComponent extends React.Component {
             this.acknowledgedBatchExtensions = new Set();
         }
         this.state.callback(false);
+    }
+
+    setLoadWaiting (waiting) {
+        if (typeof window === 'undefined') return;
+        window.dispatchEvent(new CustomEvent(waiting ? 'cyso:load-waiting' : 'cyso:load-resumed'));
     }
 
     handleDefaultPermissionChange (permissionType, setting) {

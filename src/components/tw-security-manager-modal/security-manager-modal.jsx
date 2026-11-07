@@ -51,6 +51,7 @@ const SecurityManagerModalComponent = props => {
             className={props.isDarkMode ? `${styles.modalContent} ${styles.dark}` : styles.modalContent}
             onRequestClose={props.enableButtons ? props.onDenied : noop}
             contentLabel={props.intl.formatMessage(messages.title)}
+            overlayClassName={styles.modalOverlay}
             id="securitymanagermodal"
         >
             <Box className={styles.body}>

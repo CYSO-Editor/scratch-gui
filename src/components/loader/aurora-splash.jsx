@@ -11,6 +11,7 @@ const STATUS_BUILD = '正在构建编辑器…';
 const STATUS_ASSETS = '正在准备素材…';
 const STATUS_LOAD = '正在加载素材 (';
 const STATUS_DOWNLOAD = '正在下载素材 (';
+const STATUS_WAITING = '等待确认扩展…';
 const STATUS_READY = '即将完成…';
 
 const STAGE_GOAL = {
@@ -77,6 +78,7 @@ class AuroraSplash extends React.Component {
     this.pendingFinish = false;
     this.hasCompleted = false;
     this.bootPending = true;
+    this.waitingForUser = false;
     this.handoffProgress = 0;
     this.mounted = false;
     this.themeApplied = false;
@@ -91,6 +93,8 @@ class AuroraSplash extends React.Component {
     this.onPhase = this.onPhase.bind(this);
     this.onDone = this.onDone.bind(this);
     this.onHandoff = this.onHandoff.bind(this);
+    this.onLoadWaiting = this.onLoadWaiting.bind(this);
+    this.onLoadResumed = this.onLoadResumed.bind(this);
   }
 
   reportReady () {
@@ -105,6 +109,8 @@ class AuroraSplash extends React.Component {
     window.addEventListener('cyso:load-progress', this.onProgress);
     window.addEventListener('cyso:load-phase', this.onPhase);
     window.addEventListener('cyso:load-done', this.onDone);
+    window.addEventListener('cyso:load-waiting', this.onLoadWaiting);
+    window.addEventListener('cyso:load-resumed', this.onLoadResumed);
     if (window.cysoBootDone) {
       this.adoptHandoff(window.cysoBootHandoff);
       this.ensureVisible();
@@ -121,6 +127,8 @@ class AuroraSplash extends React.Component {
     window.removeEventListener('cyso:load-progress', this.onProgress);
     window.removeEventListener('cyso:load-phase', this.onPhase);
     window.removeEventListener('cyso:load-done', this.onDone);
+    window.removeEventListener('cyso:load-waiting', this.onLoadWaiting);
+    window.removeEventListener('cyso:load-resumed', this.onLoadResumed);
     this.clearTimers();
   }
 
@@ -189,6 +197,7 @@ class AuroraSplash extends React.Component {
   }
 
   ensureVisible () {
+    if (this.hasCompleted) return;
     if (!this.themeApplied) {
       this.applyTheme();
       this.themeApplied = true;
@@ -312,10 +321,13 @@ class AuroraSplash extends React.Component {
 
   onPhase (e) {
     if ((!this.props.active && !this.bootPending) || !this.shouldShow()) return;
+    const phase = e && e.detail;
+    if (phase === 'parse' && this.hasCompleted) {
+      this.reset();
+    }
     const now = performance.now();
     if (now - this.lastEmit < PROGRESS_THROTTLE) return;
     this.lastEmit = now;
-    const phase = e && e.detail;
     if (phase === 'parse') {
       this.goal = Math.max(this.goal, STAGE_GOAL.parse);
       this.setStatus(STATUS_PARSE);
@@ -355,8 +367,29 @@ class AuroraSplash extends React.Component {
     this.startLoop();
   }
 
+  onLoadWaiting () {
+    if (!this.state.visible && !this.bootPending) return;
+    this.waitingForUser = true;
+    this.hasCompleted = false;
+    this.pendingFinish = false;
+    this.ensureVisible();
+    if (this.watchdog) {
+      clearTimeout(this.watchdog);
+      this.watchdog = 0;
+    }
+    this.renderedStatus = '';
+    this.setStatus(STATUS_WAITING);
+  }
+
+  onLoadResumed () {
+    if (!this.waitingForUser) return;
+    this.waitingForUser = false;
+    this.armWatchdog();
+    this.startLoop();
+  }
+
   onDone () {
-    if (!this.state.visible) return;
+    if (!this.state.visible || this.waitingForUser) return;
     this.hasCompleted = true;
     if (this.watchdog) {
       clearTimeout(this.watchdog);
